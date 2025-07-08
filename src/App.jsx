@@ -1,13 +1,16 @@
 import { ChakraProvider, Box, Container, VStack, extendTheme } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Landing } from './Landing';
-import { lazy, Suspense, createContext, useEffect, useState } from 'react';
+import { Suspense, createContext, useEffect, useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Navbar from './Navbar';
 import Terms from './Terms';
 import Privacy from './Privacy';
 import Login from './Login';
 import SignUp from './SignUp';
+import Feedback from './Feedback';
+import Admin from './Admin';
+import Docs from './Docs';
 import Forgot from './Forgot';
 import Reset from './Reset';
 import Profile from './Profile';
