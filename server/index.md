@@ -38,8 +38,8 @@ role in the overall project.
 
 ## Overview
 
-The server (in server/index.js) provides the backend services for the Boiler application. Its
-main responsibilities are:
+The server (in server/index.js) provides the backend services for the Boiler application. Its main
+responsibilities are:
 
 - **AI-Power Presentation Creation:** Accepts requests to generate presentations using AI models
   (e.g., GPT and Gemini models).

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* global use, db */
 
@@ -15,5 +14,3 @@ db.users.updateOne(
     },
     { upsert: true }
 );
-
-

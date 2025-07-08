@@ -4,10 +4,10 @@ This document provides a comprehensive overview of the configuration and depende
 backend server of the Boiler.pro platform, as defined in the file:  
   server/package.json
 
-Boiler Server (named “boiler-server”) is the backend component powering
-Boiler.pro—an AI-driven research and presentation platform. It leverages modern Node.js
-features (ES modules) and many industry-standard libraries to support API endpoints, authentication,
-AI service integrations, and performance monitoring.
+Boiler Server (named “boiler-server”) is the backend component powering Boiler.pro—an AI-driven
+research and presentation platform. It leverages modern Node.js features (ES modules) and many
+industry-standard libraries to support API endpoints, authentication, AI service integrations, and
+performance monitoring.
 
 ---
 
@@ -27,8 +27,8 @@ AI service integrations, and performance monitoring.
 ## Overview
 
 The `server/package.json` file is the configuration file for the Node.js backend server of the
-Boiler.pro platform. It defines project metadata, external library dependencies, development
-tools, and runtime requirements. Key highlights include:
+Boiler.pro platform. It defines project metadata, external library dependencies, development tools,
+and runtime requirements. Key highlights include:
 
 - **ES Module Support:** The `"type": "module"` flag allows the use of native ECMAScript module
   syntax.

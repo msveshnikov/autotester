@@ -32,10 +32,10 @@ const Terms = () => {
                         1. Acceptance of Terms
                     </Heading>
                     <Text mb={4}>
-                        By accessing and using Boiler.pro, you agree to comply with these
-                        Terms of Service and acknowledge that this agreement represents a legally
-                        binding contract between you and Boiler.pro. If you do not agree with
-                        these terms, please do not use the platform.
+                        By accessing and using Boiler.pro, you agree to comply with these Terms of
+                        Service and acknowledge that this agreement represents a legally binding
+                        contract between you and Boiler.pro. If you do not agree with these terms,
+                        please do not use the platform.
                     </Text>
                 </Box>
 
@@ -58,8 +58,8 @@ const Terms = () => {
                     <Text mb={4}>
                         Our platform employs advanced AI algorithms for data aggregation, research
                         synthesis, and presentation generation. While we strive for accuracy,
-                        Boiler.pro does not warrant that the AI-generated outputs or insights
-                        will be error-free or applicable for specific purposes.
+                        Boiler.pro does not warrant that the AI-generated outputs or insights will
+                        be error-free or applicable for specific purposes.
                     </Text>
                     <UnorderedList spacing={2} mb={4}>
                         <ListItem>Data Aggregation and Analysis</ListItem>
@@ -75,11 +75,10 @@ const Terms = () => {
                         4. Research Data &amp; Accuracy
                     </Heading>
                     <Text mb={4}>
-                        Boiler.pro endeavors to provide accurate and reliable research
-                        insights and presentation content. However, we make no guarantees regarding
-                        the completeness, accuracy, or reliability of the data. Users are
-                        responsible for verifying any critical information obtained from the
-                        platform.
+                        Boiler.pro endeavors to provide accurate and reliable research insights and
+                        presentation content. However, we make no guarantees regarding the
+                        completeness, accuracy, or reliability of the data. Users are responsible
+                        for verifying any critical information obtained from the platform.
                     </Text>
                 </Box>
 
@@ -88,8 +87,8 @@ const Terms = () => {
                         5. Features
                     </Heading>
                     <Text mb={4}>
-                        Boiler.pro offers features such as automated research aggregation,
-                        rapid presentation generation, dynamic slide customization, and AI-powered
+                        Boiler.pro offers features such as automated research aggregation, rapid
+                        presentation generation, dynamic slide customization, and AI-powered
                         insights. These features are subject to periodic updates and modifications
                         without prior notice.
                     </Text>
@@ -100,10 +99,10 @@ const Terms = () => {
                         6. Liability
                     </Heading>
                     <Text mb={4}>
-                        In no event shall Boiler.pro or its suppliers be liable for any
-                        direct, indirect, incidental, consequential, or punitive damages arising
-                        from your use of, or inability to use, the materials on this platform, even
-                        if advised of the possibility of such damages.
+                        In no event shall Boiler.pro or its suppliers be liable for any direct,
+                        indirect, incidental, consequential, or punitive damages arising from your
+                        use of, or inability to use, the materials on this platform, even if advised
+                        of the possibility of such damages.
                     </Text>
                 </Box>
 
@@ -125,8 +124,8 @@ const Terms = () => {
                     </Heading>
                     <Text mb={4}>
                         These Terms shall be governed by and construed in accordance with the laws
-                        of the jurisdiction in which Boiler.pro operates, without regard to
-                        its conflict of law provisions.
+                        of the jurisdiction in which Boiler.pro operates, without regard to its
+                        conflict of law provisions.
                     </Text>
                 </Box>
 
@@ -147,10 +146,10 @@ const Terms = () => {
                         10. Intellectual Property Rights
                     </Heading>
                     <Text mb={4}>
-                        All content, trademarks, and other intellectual property on
-                        Boiler.pro, including text, graphics, logos, images, and software,
-                        remain the property of Boiler.pro and are protected by international
-                        copyright and trademark laws.
+                        All content, trademarks, and other intellectual property on Boiler.pro,
+                        including text, graphics, logos, images, and software, remain the property
+                        of Boiler.pro and are protected by international copyright and trademark
+                        laws.
                     </Text>
                 </Box>
 
@@ -171,9 +170,9 @@ const Terms = () => {
                         12. Termination
                     </Heading>
                     <Text mb={4}>
-                        We reserve the right to terminate or suspend your access to
-                        Boiler.pro, without prior notice or liability, for any reason,
-                        including but not limited to a breach of these Terms.
+                        We reserve the right to terminate or suspend your access to Boiler.pro,
+                        without prior notice or liability, for any reason, including but not limited
+                        to a breach of these Terms.
                     </Text>
                 </Box>
             </VStack>
