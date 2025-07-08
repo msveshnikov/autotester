@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="styles.css" data-precedence="next" />
+        <title>BoilerPlate.Help - AI-Ready Boilerplate with Auth, Stripe & Admin</title>
+        <meta
+            name="description"
+            content="Jumpstart your AI application development with BoilerPlate.Help - featuring built-in authentication, Stripe payments, admin dashboard, and AI integrations."
+        />
+        <meta name="generator" content="v0.dev" />
+        <meta name="next-size-adjust" />
+    </head>
+    <body class="__className_d65c78">
+        <div class="flex min-h-screen flex-col">
+            <header
+                class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            >
+                <div class="container flex h-16 items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-box h-6 w-6 text-primary"
+                        >
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                            ></path>
+                            <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                            <line x1="12" x2="12" y1="22" y2="12"></line></svg
+                        ><span class="text-xl font-bold">BoilerPlate.Help</span>
+                    </div>
+                    <nav class="hidden md:flex items-center gap-6">
+                        <a class="text-sm font-medium hover:text-primary" href="#features"
+                            >Features</a
+                        ><a class="text-sm font-medium hover:text-primary" href="#architecture"
+                            >Architecture</a
+                        ><a class="text-sm font-medium hover:text-primary" href="#demo">Demo</a
+                        ><a
+                            class="text-sm font-medium hover:text-primary"
+                            href="https://github.com/msveshnikov/boiler-plate"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >GitHub</a
+                        >
+                    </nav>
+                    <div class="flex items-center gap-4">
+                        <a
+                            class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
+                            href="/login"
+                            >Log in</a
+                        ><a
+                            class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-md px-3"
+                            href="/signup"
+                            >Sign up</a
+                        >
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1">
+                <section class="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+                    <div class="container px-4 md:px-6">
+                        <div
+                            class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]"
+                        >
+                            <div class="flex flex-col justify-center space-y-4">
+                                <div class="space-y-2">
+                                    <h1
+                                        class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
+                                    >
+                                        Build Faster with the AI-Ready Boilerplate
+                                    </h1>
+                                    <p class="max-w-[600px] text-muted-foreground md:text-xl">
+                                        BoilerPlate.Help provides authentication, Stripe
+                                        integration, an admin dashboard, and multiple AI model
+                                        integrations out-of-the-box. Focus on your core features.
+                                    </p>
+                                </div>
+                                <div class="flex flex-col gap-2 min-[400px]:flex-row">
+                                    <a
+                                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8"
+                                        href="/signup"
+                                        >Get Started
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="lucide lucide-arrow-right ml-2 h-4 w-4"
+                                        >
+                                            <path d="M5 12h14"></path>
+                                            <path d="m12 5 7 7-7 7"></path></svg></a
+                                    ><a
+                                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-md px-8"
+                                        href="https://github.com/msveshnikov/boiler-plate"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >View on GitHub</a
+                                    >
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="relative h-[450px] w-full overflow-hidden rounded-xl">
+                                    <img
+                                        src="image.png"
+                                        alt="Boilerplate Application Screenshot"
+                                        class="object-cover w-full h-full"
+                                    />
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="features" class="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+                    <div class="container px-4 md:px-6">
+                        <div
+                            class="flex flex-col items-center justify-center space-y-4 text-center"
+                        >
+                            <div class="space-y-2">
+                                <div
+                                    class="inline-block rounded-lg bg-primary px-3 py-1 text-sm text-primary-foreground"
+                                >
+                                    Features
+                                </div>
+                                <h2 class="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                                    Key Boilerplate Features
+                                </h2>
+                                <p
+                                    class="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
+                                >
+                                    Everything you need to launch your next AI-powered application
+                                    quickly and securely.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 lg:grid-cols-3"
+                        >
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-lock h-6 w-6 text-primary"
+                                    >
+                                        <rect
+                                            width="18"
+                                            height="11"
+                                            x="3"
+                                            y="11"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Authentication</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Secure user login, signup, password reset flows included.
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-credit-card h-6 w-6 text-primary"
+                                    >
+                                        <rect
+                                            width="20"
+                                            height="14"
+                                            x="2"
+                                            y="5"
+                                            rx="2"
+                                        ></rect>
+                                        <line x1="2" x2="22" y1="10" y2="10"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Stripe Integration</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Ready-to-use payment processing setup for subscriptions or
+                                    one-time payments.
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-settings h-6 w-6 text-primary"
+                                    >
+                                        <path
+                                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.72l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+                                        ></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Admin Dashboard</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Manage users, view feedback, monitor system activities.
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-brain-circuit h-6 w-6 text-primary"
+                                    >
+                                        <path
+                                            d="M12 5a3 3 0 1 0-5.997.125 4 4 0 1 0-2.43 6.248 4 4 0 1 0 .246 6.253A3 3 0 1 0 8 19a3 3 0 1 0 4-5.875 4 4 0 1 0 6.376-3.5 4 4 0 1 0-3.5-6.375A3 3 0 1 0 12 5Z"
+                                        ></path>
+                                        <path d="M15.5 6.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Z"></path>
+                                        <path d="M12 13a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Z"></path>
+                                        <path d="M8.5 17.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Z"></path>
+                                        <path d="M5.5 11.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">AI Integrations</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Connect easily with OpenAI, Claude, Gemini, Deepseek APIs.
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-layers h-6 w-6 text-primary"
+                                    >
+                                        <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path>
+                                        <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path>
+                                        <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Modern Tech Stack</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Built with React, Node.js, Express, MongoDB, and Vite.
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm"
+                            >
+                                <div class="rounded-full bg-primary/10 p-3">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-server h-6 w-6 text-primary"
+                                    >
+                                        <rect
+                                            width="20"
+                                            height="8"
+                                            x="2"
+                                            y="2"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <rect
+                                            width="20"
+                                            height="8"
+                                            x="2"
+                                            y="14"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <line x1="6" x2="6.01" y1="6" y2="6"></line>
+                                        <line x1="6" x2="6.01" y1="18" y2="18"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Scalable Architecture</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Clear separation of client/server concerns, Docker support.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="architecture" class="w-full py-12 md:py-24 lg:py-32">
+                    <div class="container px-4 md:px-6">
+                        <div
+                            class="flex flex-col items-center justify-center space-y-4 text-center"
+                        >
+                            <div class="space-y-2">
+                                <div
+                                    class="inline-block rounded-lg bg-primary px-3 py-1 text-sm text-primary-foreground"
+                                >
+                                    Architecture
+                                </div>
+                                <h2 class="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                                    Clean & Maintainable Structure
+                                </h2>
+                                <p
+                                    class="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
+                                >
+                                    Organized for scalability and ease of development, following
+                                    best practices.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="mx-auto grid max-w-5xl grid-cols-1 gap-8 py-12 md:grid-cols-3"
+                        >
+                            <div class="flex flex-col items-center space-y-4">
+                                <div
+                                    class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-monitor h-8 w-8"
+                                    >
+                                        <rect
+                                            width="20"
+                                            height="14"
+                                            x="2"
+                                            y="3"
+                                            rx="2"
+                                        ></rect>
+                                        <line x1="8" x2="16" y1="21" y2="21"></line>
+                                        <line x1="12" x2="12" y1="17" y2="21"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Client (React)</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Modern frontend built with React, Vite, and Tailwind CSS.
+                                    Includes core components, auth pages, admin interface.
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center space-y-4">
+                                <div
+                                    class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-server h-8 w-8"
+                                    >
+                                        <rect
+                                            width="20"
+                                            height="8"
+                                            x="2"
+                                            y="2"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <rect
+                                            width="20"
+                                            height="8"
+                                            x="2"
+                                            y="14"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <line x1="6" x2="6.01" y1="6" y2="6"></line>
+                                        <line x1="6" x2="6.01" y1="18" y2="18"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Server (Node.js)</h3>
+                                <p class="text-center text-muted-foreground">
+                                    Robust backend using Node.js and Express. Handles auth, API
+                                    routes, AI service connections, database interactions.
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center space-y-4">
+                                <div
+                                    class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-database h-8 w-8"
+                                    >
+                                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                        <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+                                        <path d="M3 12A9 3 0 0 0 21 12"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Database & Services</h3>
+                                <p class="text-center text-muted-foreground">
+                                    MongoDB for data persistence. Integrations for AI models
+                                    (OpenAI, Claude, etc.) and Stripe payments.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="demo" class="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+                    <div class="container px-4 md:px-6">
+                        <div
+                            class="flex flex-col items-center justify-center space-y-4 text-center"
+                        >
+                            <div class="space-y-2">
+                                <div
+                                    class="inline-block rounded-lg bg-primary px-3 py-1 text-sm text-primary-foreground"
+                                >
+                                    Demo
+                                </div>
+                                <h2 class="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                                    See It In Action
+                                </h2>
+                                <p
+                                    class="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
+                                >
+                                    Explore the live application built with this boilerplate. Test
+                                    user authentication, features, and the admin panel.
+                                </p>
+                            </div>
+                            <div class="mt-6">
+                                <a
+                                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8"
+                                    href="https://Boilerplate.help"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    >Launch Demo
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-external-link ml-2 h-4 w-4"
+                                    >
+                                        <path
+                                            d="M15 3h6v6"
+                                        ></path>
+                                        <path d="M10 14 21 3"></path>
+                                        <path
+                                            d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                                        ></path></svg
+                                ></a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <footer class="w-full border-t py-6 md:py-12">
+                <div class="container px-4 md:px-6">
+                    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-box h-6 w-6 text-primary"
+                                >
+                                    <path
+                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                                    ></path>
+                                    <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                                    <line x1="12" x2="12" y1="22" y2="12"></line></svg
+                                ><span class="text-xl font-bold">BoilerPlate.Help</span>
+                            </div>
+                            <p class="text-sm text-muted-foreground">
+                                AI-ready boilerplate with auth, Stripe, Admin, and AI integrations.
+                            </p>
+                            <div class="flex gap-4">
+                                <a
+                                    class="text-muted-foreground hover:text-foreground"
+                                    href="https://github.com/msveshnikov/boiler-plate"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="h-5 w-5"
+                                    >
+                                        <path
+                                            d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-1.5 6-6.5a5.5 5.5 0 0 0-1.5-4A5.2 5.2 0 0 0 18 2H6a5.2 5.2 0 0 0-.5 2 5.5 5.5 0 0 0-1.5 4c0 5 3 6.5 6 6.5a4.8 4.8 0 0 0-1 3.5v4"
+                                        ></path></svg
+                                    ><span class="sr-only">GitHub</span></a
+                                >
+                                <!-- Add other social links if applicable -->
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold">Product</h3>
+                            <ul class="space-y-2">
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="#features"
+                                        >Features</a
+                                    >
+                                </li>
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="#architecture"
+                                        >Architecture</a
+                                    >
+                                </li>
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="#demo"
+                                        >Demo</a
+                                    >
+                                </li>
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="https://github.com/msveshnikov/boiler-plate"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >GitHub</a
+                                    >
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold">Company</h3>
+                            <ul class="space-y-2">
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="https://blog.autocode.work"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >Blog</a
+                                    >
+                                </li>
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="https://github.com/msveshnikov/boiler-plate/issues"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >Contact / Issues</a
+                                    >
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold">Legal</h3>
+                            <ul class="space-y-2">
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="/terms"
+                                        >Terms of Service</a
+                                    >
+                                </li>
+                                <li>
+                                    <a
+                                        class="text-sm text-muted-foreground hover:text-foreground"
+                                        href="/privacy"
+                                        >Privacy Policy</a
+                                    >
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+                        © 2024 MaxSoft. All rights reserved.
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </body>
+</html>

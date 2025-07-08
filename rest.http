@@ -1,0 +1,7 @@
+GET https://boiler.pro/sitemap.xml
+
+###
+
+GET http://localhost:3000/sitemap.xml
+
+###
