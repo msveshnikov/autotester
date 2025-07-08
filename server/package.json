@@ -1,7 +1,7 @@
 {
-    "name": "boiler-server",
+    "name": "autotester-server",
     "version": "1.0.0",
-    "description": "Backend server for Boiler",
+    "description": "Backend server for AutoTester.dev",
     "main": "index.js",
     "type": "module",
     "scripts": {
@@ -18,8 +18,8 @@
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
-        "express-rate-limit": "^7.5.0",
         "express-prom-bundle": "^8.0.0",
+        "express-rate-limit": "^7.5.0",
         "google-auth-library": "^9.15.1",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.10.1",

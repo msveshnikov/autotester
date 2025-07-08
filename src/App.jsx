@@ -13,17 +13,13 @@ import Reset from './Reset';
 import Profile from './Profile';
 import { BottomNavigationBar } from './BottomNavigationBar';
 
-const Admin = lazy(() => import('./Admin'));
-const Feedback = lazy(() => import('./Feedback'));
-const Docs = lazy(() => import('./Docs'));
-
-export const API_URL = import.meta.env.DEV ? 'http://localhost:3000' : 'https://boiler.pro';
+export const API_URL = import.meta.env.DEV ? 'http://localhost:3000' : 'https://autotester.dev';
 export const UserContext = createContext(null);
 
 const theme = extendTheme({
     colors: {
         primary: {
-            500: '#3498DB'
+            500: '#3498DB' // Keep original theme colors for now, as no new branding specified
         },
         secondary: {
             500: '#2980B9',
@@ -54,6 +50,11 @@ function App() {
                 .then((res) => res.json())
                 .then((data) => {
                     setUser(data);
+                })
+                .catch((error) => {
+                    console.error('Failed to fetch profile:', error);
+                    localStorage.removeItem('token'); // Remove invalid token
+                    setUser(null);
                 });
         }
     }, []);
@@ -74,32 +75,38 @@ function App() {
                     }
                 >
                     <UserContext.Provider value={{ user, setUser }}>
-                        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                        <Router>
                             <Box pb="50px" minH="100vh" bg="gray.50">
                                 <Navbar />
                                 <Container maxW="container.xl" py={8}>
                                     <VStack spacing={8}>
                                         <Routes>
                                             <Route path="/" element={<Landing />} />
-                                            <Route path="/research" element={<Landing />} />
 
                                             <Route path="/privacy" element={<Privacy />} />
                                             <Route path="/terms" element={<Terms />} />
                                             <Route path="/login" element={<Login />} />
                                             <Route path="/signup" element={<SignUp />} />
                                             <Route path="/forgot" element={<Forgot />} />
+                                            {/* Profile route requires authentication - implement protection if needed */}
                                             <Route path="/profile" element={<Profile />} />
+                                            {/* Feedback route can be accessed by anyone */}
                                             <Route path="/feedback" element={<Feedback />} />
                                             <Route
                                                 path="/reset-password/:token"
                                                 element={<Reset />}
                                             />
+                                            {/* Admin route requires admin privileges - implement protection */}
                                             <Route path="/admin" element={<Admin />} />
+                                            {/* Docs route */}
                                             <Route path="/docs/*" element={<Docs />} />
+
+                                            {/* Redirect unknown routes to home */}
                                             <Route path="*" element={<Navigate to="/" replace />} />
                                         </Routes>
                                     </VStack>
                                 </Container>
+                                {/* Bottom navigation might need updates for AutoTester.dev specific routes */}
                                 <BottomNavigationBar />
                             </Box>
                         </Router>

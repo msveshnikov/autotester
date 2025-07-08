@@ -1,6 +1,6 @@
 import { Box, Icon, Text } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
-import { FiHome, FiBarChart2, FiUser } from 'react-icons/fi';
+import { FiHome, FiUser, FiMessageSquare, FiBookOpen } from 'react-icons/fi';
 
 export const BottomNavigationBar = () => (
     <Box
@@ -11,7 +11,7 @@ export const BottomNavigationBar = () => (
         height="50px"
         bg="white"
         borderTopWidth="1px"
-        display="flex"
+        display={{ base: 'flex', md: 'none' }} // Show only on mobile/small screens
         justifyContent="space-around"
         alignItems="center"
         zIndex={1000}
@@ -29,25 +29,29 @@ export const BottomNavigationBar = () => (
         </Box>
         <Box
             as={Link}
-            to="/presentation"
-            p={2}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            <Icon as={FiBarChart2} boxSize={5} />
-            <Text fontSize="xs">Presentation</Text>
-        </Box>
-        <Box
-            as={Link}
-            to="/insights"
+            to="/profile"
             p={2}
             display="flex"
             flexDirection="column"
             alignItems="center"
         >
             <Icon as={FiUser} boxSize={5} />
-            <Text fontSize="xs">Insights</Text>
+            <Text fontSize="xs">Profile</Text>
+        </Box>
+        <Box
+            as={Link}
+            to="/feedback"
+            p={2}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+        >
+            <Icon as={FiMessageSquare} boxSize={5} />
+            <Text fontSize="xs">Feedback</Text>
+        </Box>
+        <Box as={Link} to="/docs" p={2} display="flex" flexDirection="column" alignItems="center">
+            <Icon as={FiBookOpen} boxSize={5} />
+            <Text fontSize="xs">Docs</Text>
         </Box>
     </Box>
 );

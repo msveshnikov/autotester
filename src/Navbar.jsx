@@ -37,6 +37,7 @@ export default function Navbar() {
     };
 
     const NAV_ITEMS = [
+        { label: 'Docs', href: '/docs', requiresAuth: false }, // Added Docs link
         { label: 'Feedback', href: '/feedback', requiresAuth: false },
         ...(user?.isAdmin ? [{ label: 'Admin', href: '/admin', requiresAuth: true }] : [])
     ];
@@ -62,7 +63,7 @@ export default function Navbar() {
                     ml={{ base: -2 }}
                     display={{ base: 'flex', md: 'none' }}
                 >
-                    {filteredNavItems.length > 0 && (
+                    {filteredNavItems.length > 0 && ( // Only show hamburger if there are items
                         <IconButton
                             onClick={onToggle}
                             icon={
@@ -74,10 +75,30 @@ export default function Navbar() {
                     )}
                 </Flex>
                 <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }} align="center">
+                    {/* Site Title/Logo */}
+                    <Link
+                        as={RouterLink}
+                        to="/"
+                        onClick={handleNavClick}
+                        _hover={{ textDecoration: 'none' }}
+                    >
+                        <Text
+                            fontFamily="heading"
+                            fontWeight="bold"
+                            fontSize={{ base: 'md', md: 'lg' }}
+                            color={useColorModeValue('gray.800', 'white')}
+                        >
+                            AutoTester.dev
+                        </Text>
+                    </Link>
+
+                    {/* Desktop Navigation */}
                     <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
                         <DesktopNav navItems={filteredNavItems} />
                     </Flex>
                 </Flex>
+
+                {/* Auth/Profile Buttons */}
                 <Stack flex={{ base: 1, md: 0 }} justify="flex-end" direction="row" spacing={6}>
                     {user?.email ? (
                         <>
@@ -121,10 +142,10 @@ export default function Navbar() {
                                 fontSize="sm"
                                 fontWeight={600}
                                 color="white"
-                                bg="#3498DB"
+                                bg="primary.500" // Using primary color from theme
                                 onClick={handleNavClick}
                                 _hover={{
-                                    bg: '#2980B9'
+                                    bg: 'secondary.500' // Using secondary color from theme
                                 }}
                             >
                                 Sign Up
@@ -133,7 +154,9 @@ export default function Navbar() {
                     )}
                 </Stack>
             </Flex>
-            {filteredNavItems.length > 0 && (
+
+            {/* Mobile Navigation */}
+            {filteredNavItems.length > 0 && ( // Only show collapse if there are items
                 <Collapse in={isOpen} animateOpacity>
                     <MobileNav navItems={filteredNavItems} onNavClick={handleNavClick} />
                 </Collapse>
@@ -206,7 +229,7 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
                 <Box>
                     <Text
                         transition="all .3s ease"
-                        _groupHover={{ color: '#3498DB' }}
+                        _groupHover={{ color: 'primary.500' }} // Using primary color
                         fontWeight={500}
                     >
                         {label}
@@ -222,7 +245,8 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
                     align="center"
                     flex={1}
                 >
-                    <Icon color="#3498DB" w={5} h={5} as={ChevronRightIcon} />
+                    <Icon color="primary.500" w={5} h={5} as={ChevronRightIcon} />{' '}
+                    {/* Using primary color */}
                 </Flex>
             </Stack>
         </Link>
@@ -235,24 +259,97 @@ const MobileNav = ({ navItems, onNavClick }) => {
             {navItems.map((navItem) => (
                 <MobileNavItem key={navItem.label} {...navItem} onNavClick={onNavClick} />
             ))}
+            {/* Add Profile/Auth links in Mobile Nav if not already there */}
+            <Stack
+                spacing={4}
+                mt={4}
+                borderTop="1px"
+                borderColor={useColorModeValue('gray.200', 'gray.700')}
+                pt={4}
+            >
+                {/* Profile/Sign Out or Login/Sign Up */}
+                {useContext(UserContext).user?.email ? (
+                    <>
+                        <Link
+                            py={2}
+                            as={RouterLink}
+                            to="/profile"
+                            onClick={onNavClick}
+                            fontWeight={600}
+                            color={useColorModeValue('gray.600', 'gray.200')}
+                        >
+                            Profile
+                        </Link>
+                        <Link
+                            py={2}
+                            onClick={() => {
+                                onNavClick();
+                                useContext(UserContext).setUser(null); // Directly update context
+                                localStorage.removeItem('token');
+                                useNavigate()('/'); // Use navigate from hook or pass it down
+                            }}
+                            fontWeight={600}
+                            color="red.500"
+                        >
+                            Sign Out
+                        </Link>
+                    </>
+                ) : (
+                    <>
+                        <Link
+                            py={2}
+                            as={RouterLink}
+                            to="/login"
+                            onClick={onNavClick}
+                            fontWeight={600}
+                            color={useColorModeValue('gray.600', 'gray.200')}
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            py={2}
+                            as={RouterLink}
+                            to="/signup"
+                            onClick={onNavClick}
+                            fontWeight={600}
+                            color={useColorModeValue('gray.600', 'gray.200')}
+                        >
+                            Sign Up
+                        </Link>
+                    </>
+                )}
+            </Stack>
         </Stack>
     );
 };
 
 const MobileNavItem = ({ label, children, href, onNavClick }) => {
     const { isOpen, onToggle } = useDisclosure();
+    const navigate = useNavigate(); // Use navigate hook here
+
+    const handleClick = () => {
+        if (children) {
+            onToggle();
+        } else {
+            onNavClick();
+            if (href) {
+                navigate(href); // Use navigate to handle navigation
+            }
+        }
+    };
 
     return (
-        <Stack spacing={4} onClick={children ? onToggle : onNavClick}>
+        <Stack spacing={4} onClick={handleClick}>
             <Flex
                 py={2}
-                as={RouterLink}
-                to={href ?? '#'}
+                // as={RouterLink} // Removed as={RouterLink} from Flex
+                // to={href ?? '#'} // Removed to from Flex
                 justify="space-between"
                 align="center"
                 _hover={{
                     textDecoration: 'none'
                 }}
+                cursor="pointer" // Add cursor pointer to indicate interactivity
             >
                 <Text fontWeight={600} color={useColorModeValue('gray.600', 'gray.200')}>
                     {label}

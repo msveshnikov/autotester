@@ -1,78 +1,50 @@
-import { load } from 'cheerio';
+import { load } from 'cheerio'; // Although enrichMetadata is removed, cheerio might be useful for future utilities
 
-export const enrichMetadata = async (html, slug) => {
-    try {
-        if (!slug) return html;
-
-        const presentation =
-            (await Presentation.findOne({ slug })) || (await Presentation.findById(slug));
-        if (!presentation) return html;
-
-        const slidesSummary =
-            Array.isArray(presentation.slides) && presentation.slides.length
-                ? presentation.slides
-                      .map((slide, i) => `Slide ${i + 1}: ${slide.title || 'Untitled'}`)
-                      .join('. ')
-                : '';
-
-        const $ = load(html);
-        $('title').text(`${presentation.title} | Boiler.pro`);
-        $('meta[name="description"]').attr(
-            'content',
-            presentation.description ||
-                `An engaging presentation created with Boiler.pro${
-                    Array.isArray(presentation.slides) && presentation.slides.length
-                        ? ' featuring ' + presentation.slides.length + ' slides.'
-                        : '.'
-                }`
-        );
-        $('meta[property="og:title"]').attr('content', presentation.title);
-        $('meta[property="og:description"]').attr(
-            'content',
-            presentation.description || 'An engaging presentation created with Boiler.pro.'
-        );
-        $('meta[property="og:url"]').attr(
-            'content',
-            `https://Boiler.pro/presentation/${presentation.slug}`
-        );
-
-        let imageUrl = '';
-        if (presentation.theme && presentation.theme.imageUrl) {
-            imageUrl = presentation.theme.imageUrl;
-        } else if (
-            Array.isArray(presentation.slides) &&
-            presentation.slides.length &&
-            presentation.slides[0].image
-        ) {
-            imageUrl = presentation.slides[0].image;
-        } else {
-            imageUrl = 'https://Boiler.pro/image2.jpg';
-        }
-        $('meta[property="og:image"]').attr('content', imageUrl);
-
-        const schema = {
-            '@context': 'https://schema.org',
-            '@type': 'CreativeWork',
-            name: presentation.title,
-            description: presentation.description,
-            version: presentation.version,
-            slideCount: Array.isArray(presentation.slides) ? presentation.slides.length : 0,
-            hasPart: Array.isArray(presentation.slides)
-                ? presentation.slides.map((slide, index) => ({
-                      '@type': 'CreativeWork',
-                      position: index + 1,
-                      name: slide.title || `Slide ${index + 1}`,
-                      text: slide.content || ''
-                  }))
-                : []
-        };
-
-        $('head').append(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
-        if (slidesSummary) {
-            $('body').append(`<div style="display:none">${slidesSummary}</div>`);
-        }
-        return $.html();
-    } catch {
-        return html;
-    }
+// Function to get IP address from request headers
+export const getIpFromRequest = (req) => {
+    let ips = (
+        req.headers['x-real-ip'] ||
+        req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        ''
+    ).split(',');
+    return ips[0].trim();
 };
+
+// Function to extract content from fenced code blocks
+export const extractCodeSnippet = (text) => {
+    const codeBlockRegex =
+        /```(?:json|js|html|javascript|typescript|css|python|ruby|go|java|csharp|sh|bash|yaml|yml|markdown)?\n([\s\S]*?)\n```/;
+    const match = text.match(codeBlockRegex);
+    return match ? match[1] : text;
+};
+
+// Function to create a URL-friendly slug
+export const slugify = (text) => {
+    if (!text) return '';
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/[^\w-]+/g, '') // Remove all non-word chars
+        .replace(/--+/g, '-'); // Replace multiple - with single -
+};
+
+// Basic logging utility functions
+// In a production environment, these might integrate with a dedicated logging library (e.g., Winston, Pino)
+// or a cloud logging service.
+export const logInfo = (message, context = {}) => {
+    console.log(`[INFO] ${new Date().toISOString()} ${message}`, context);
+};
+
+export const logWarning = (message, context = {}) => {
+    console.warn(`[WARN] ${new Date().toISOString()} ${message}`, context);
+};
+
+export const logError = (message, error, context = {}) => {
+    console.error(`[ERROR] ${new Date().toISOString()} ${message}`, context, error);
+};
+
+// The previous enrichMetadata function from the Boiler.pro project is removed
+// as it is not relevant to the AutoTester.dev project context.
