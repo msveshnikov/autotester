@@ -20,7 +20,7 @@ and effort traditionally required for comprehensive testing.
 ## Key Features
 
 - **AI-Powered Test Generation:** Automatically generate test scenarios based on application
-  descriptions or user flows.
+  descriptions or user flows (any link from JIRA or Confluence for example).
 - **Intelligent Element Interaction:** Use AI to reliably identify and interact with web elements,
   adapting to minor UI changes.
 - **Automated Test Execution:** Run tests across different browsers and environments seamlessly.
@@ -116,3 +116,11 @@ considerations are being explored:
       facilitate potential integrations.
 
 ## TODO
+
+- remove all models except Gemini
+- remove all models from server code, leave only Gemini
+- add to main UI starter page two links:
+    - link to the test/ticket documentation
+    - link to the actual web app URL to test on
+- add server code to parse  test/ticket description, parse webapp url for inputs/buttons and generate test cases
+- add server code to execute test cases
