@@ -215,6 +215,8 @@ const DesktopNav = ({ navItems }) => {
 };
 
 const DesktopSubNav = ({ label, href, subLabel }) => {
+    const hoverBgColor = useColorModeValue('blue.50', 'gray.900');
+
     return (
         <Link
             as={RouterLink}
@@ -223,7 +225,7 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
             display="block"
             p={2}
             rounded="md"
-            _hover={{ bg: useColorModeValue('blue.50', 'gray.900') }}
+            _hover={{ bg: hoverBgColor }}
         >
             <Stack direction="row" align="center">
                 <Box>
@@ -254,8 +256,21 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
 };
 
 const MobileNav = ({ navItems, onNavClick }) => {
+    const mobileNavBg = useColorModeValue('white', 'gray.800');
+    const mobileNavBorderColor = useColorModeValue('gray.200', 'gray.700');
+    const mobileLinkColor = useColorModeValue('gray.600', 'gray.200');
+
+    const { user, setUser } = useContext(UserContext);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+        navigate('/');
+    };
+
     return (
-        <Stack bg={useColorModeValue('white', 'gray.800')} p={4} display={{ md: 'none' }}>
+        <Stack bg={mobileNavBg} p={4} display={{ md: 'none' }}>
             {navItems.map((navItem) => (
                 <MobileNavItem key={navItem.label} {...navItem} onNavClick={onNavClick} />
             ))}
@@ -264,11 +279,12 @@ const MobileNav = ({ navItems, onNavClick }) => {
                 spacing={4}
                 mt={4}
                 borderTop="1px"
-                borderColor={useColorModeValue('gray.200', 'gray.700')}
+                borderStyle="solid"
+                borderColor={mobileNavBorderColor}
                 pt={4}
             >
                 {/* Profile/Sign Out or Login/Sign Up */}
-                {useContext(UserContext).user?.email ? (
+                {user?.email ? (
                     <>
                         <Link
                             py={2}
@@ -276,7 +292,7 @@ const MobileNav = ({ navItems, onNavClick }) => {
                             to="/profile"
                             onClick={onNavClick}
                             fontWeight={600}
-                            color={useColorModeValue('gray.600', 'gray.200')}
+                            color={mobileLinkColor}
                         >
                             Profile
                         </Link>
@@ -284,9 +300,7 @@ const MobileNav = ({ navItems, onNavClick }) => {
                             py={2}
                             onClick={() => {
                                 onNavClick();
-                                useContext(UserContext).setUser(null); // Directly update context
-                                localStorage.removeItem('token');
-                                useNavigate()('/'); // Use navigate from hook or pass it down
+                                handleLogout(); // Use the handleLogout function defined above
                             }}
                             fontWeight={600}
                             color="red.500"
@@ -302,7 +316,7 @@ const MobileNav = ({ navItems, onNavClick }) => {
                             to="/login"
                             onClick={onNavClick}
                             fontWeight={600}
-                            color={useColorModeValue('gray.600', 'gray.200')}
+                            color={mobileLinkColor}
                         >
                             Login
                         </Link>
@@ -312,7 +326,7 @@ const MobileNav = ({ navItems, onNavClick }) => {
                             to="/signup"
                             onClick={onNavClick}
                             fontWeight={600}
-                            color={useColorModeValue('gray.600', 'gray.200')}
+                            color={mobileLinkColor}
                         >
                             Sign Up
                         </Link>
@@ -325,7 +339,9 @@ const MobileNav = ({ navItems, onNavClick }) => {
 
 const MobileNavItem = ({ label, children, href, onNavClick }) => {
     const { isOpen, onToggle } = useDisclosure();
-    const navigate = useNavigate(); // Use navigate hook here
+    const navigate = useNavigate();
+    const textColor = useColorModeValue('gray.600', 'gray.200');
+    const borderColor = useColorModeValue('gray.200', 'gray.700');
 
     const handleClick = () => {
         if (children) {
@@ -333,7 +349,7 @@ const MobileNavItem = ({ label, children, href, onNavClick }) => {
         } else {
             onNavClick();
             if (href) {
-                navigate(href); // Use navigate to handle navigation
+                navigate(href);
             }
         }
     };
@@ -342,16 +358,14 @@ const MobileNavItem = ({ label, children, href, onNavClick }) => {
         <Stack spacing={4} onClick={handleClick}>
             <Flex
                 py={2}
-                // as={RouterLink} // Removed as={RouterLink} from Flex
-                // to={href ?? '#'} // Removed to from Flex
                 justify="space-between"
                 align="center"
                 _hover={{
                     textDecoration: 'none'
                 }}
-                cursor="pointer" // Add cursor pointer to indicate interactivity
+                cursor="pointer"
             >
-                <Text fontWeight={600} color={useColorModeValue('gray.600', 'gray.200')}>
+                <Text fontWeight={600} color={textColor}>
                     {label}
                 </Text>
                 {children && (
@@ -370,7 +384,7 @@ const MobileNavItem = ({ label, children, href, onNavClick }) => {
                     pl={4}
                     borderLeft={1}
                     borderStyle="solid"
-                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    borderColor={borderColor}
                     align="start"
                 >
                     {children &&

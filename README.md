@@ -44,8 +44,7 @@ assets, facilitating maintainability and scalability.
 - **Client (src/):**
 
     - Main application and layout components: `App.jsx`, `Navbar.jsx`, `Landing.jsx`, `main.jsx`
-    - User management and feedback: `Login.jsx`, `SignUp.jsx`, `Forgot.jsx`, `Reset.jsx`,
-      `Profile.jsx`, `Feedback.jsx`
+    - User management: `Login.jsx`, `SignUp.jsx`, `Forgot.jsx`, `Reset.jsx`, `Profile.jsx`
     - Admin interface: `Admin.jsx`
     - Informational pages and UI components: `Privacy.jsx`, `Terms.jsx`, `BottomNavigationBar.jsx`,
       `Docs.jsx`
@@ -55,7 +54,7 @@ assets, facilitating maintainability and scalability.
     - Authentication & administration: `admin.js`, `middleware/auth.js`, `user.js`
     - AI and search integrations: `gemini.js`, `search.js`
     - Application entry point and schemata: `index.js`
-    - Data Models: `models/Feedback.js`, `models/User.js`
+    - Data Models: `models/User.js`, `models/TestCase.js`, `models/Project.js`
     - Utility functions: `utils.js`
     - Server-specific package management: `package.json`
 

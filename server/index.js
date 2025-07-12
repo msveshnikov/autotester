@@ -10,14 +10,24 @@ import morgan from 'morgan';
 import compression from 'compression';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+
+// Import AI core utility
 import { getTextGemini } from './gemini.js';
-// Removed imports for other models as per README TODO
-import User from './models/User.js'; // Assuming User model is needed for Auth/Admin
+
+// Import Mongoose Models from server/models
+import User from './models/User.js';
+import TestCase from './models/TestCase.js'; // Represents a saved test plan
+import TestReport from './models/TestReport.js'; // Represents a test execution run
+import Project from './models/Project.js'; // Import Project model as per structure
+
+// Import routes and middleware
 import userRoutes from './user.js';
-import adminRoutes from './admin.js';
+import adminRoutes from './admin.js'; // Note: admin.js might expect a 'Presentation' model which is not defined here or in models/
 import { authenticateToken, authenticateTokenOptional } from './middleware/auth.js';
-import { fetchPageContent } from './search.js'; // Import utility to fetch web content
-import { extractCodeSnippet } from './utils.js'; // Import utility to extract code
+
+// Import utility functions
+import { fetchPageContent } from './search.js'; // Utility to fetch web content
+import { extractCodeSnippet } from './utils.js'; // Utility to extract code from text
 
 dotenv.config();
 
@@ -68,19 +78,34 @@ if (process.env.NODE_ENV === 'production') {
     app.use('/api/', limiter);
 }
 
-mongoose.connect(process.env.MONGODB_URI, {});
+// MongoDB Connection
+mongoose
+    .connect(process.env.MONGODB_URI, {})
+    .then(() => console.log('MongoDB connected'))
+    .catch((err) => console.error('MongoDB connection error:', err));
 
-// User and Admin routes
-userRoutes(app);
-adminRoutes(app);
+// ==============================================
+// Mongoose Schemas Defined Locally (e.g., Feedback)
+// Only define schemas here if they don't have dedicated files in server/models/
+// ==============================================
+
+const feedbackSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+    message: { type: String, required: true },
+    type: { type: String, enum: ['bug', 'feature', 'general'], required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Feedback = mongoose.model('Feedback', feedbackSchema);
+
+// ==============================================
+// Internal Utility Functions
+// ==============================================
 
 // AI Response Generation (utility function, now only uses Gemini)
 const generateAIResponse = async (prompt, model, temperature = 0.7) => {
     // As per README, only Gemini is used for core AI features
-    // Validate that the requested model is a Gemini model if necessary, or rely on getTextGemini
-    // which is expected to handle valid Gemini model names.
-    // For now, we assume the model parameter passed is a valid Gemini model name expected by getTextGemini.
     try {
+        // getTextGemini is expected to handle valid Gemini model names like 'gemini-pro'
         return await getTextGemini(prompt, model, temperature);
     } catch (error) {
         console.error(`Error calling Gemini model ${model}:`, error);
@@ -99,11 +124,13 @@ export const getIpFromRequest = (req) => {
 };
 
 // Middleware to check AI usage limits for free users
-export const checkAiLimit = async (req, res, next) => {
+const checkAiLimit = async (req, res, next) => {
     try {
+        // req.user is set by authenticateToken middleware
+        // authenticateToken is required for /api/tests/generate, so req.user will be present if authenticated
         const user = req.user ? await User.findById(req.user.id) : null;
 
-        // If user is logged in and not subscribed/trialing
+        // If user is logged in and not subscribed/trialing, apply limit
         if (
             user &&
             user.subscriptionStatus !== 'active' &&
@@ -113,11 +140,14 @@ export const checkAiLimit = async (req, res, next) => {
             const lastRequest = user.lastAiRequestTime ? new Date(user.lastAiRequestTime) : null;
 
             // Check if the last request was today (resets daily limit)
-            if (lastRequest && now.toDateString() === lastRequest.toDateString()) {
-                if (user.aiRequestCount >= 3) {
-                    // Limit to 3 requests per day for free users for AI-intensive tasks
+            const isToday = lastRequest && now.toDateString() === lastRequest.toDateString();
+
+            const dailyLimit = 3; // Define the daily limit for free users
+
+            if (isToday) {
+                if (user.aiRequestCount >= dailyLimit) {
                     return res.status(429).json({
-                        error: 'Daily AI usage limit reached. Please upgrade for unlimited access.'
+                        error: `Daily AI usage limit (${dailyLimit}) reached. Please upgrade for unlimited access.`
                     });
                 }
                 user.aiRequestCount++;
@@ -127,22 +157,24 @@ export const checkAiLimit = async (req, res, next) => {
                 user.lastAiRequestTime = now;
             }
             await user.save();
+            console.log(`User ${user.email} AI usage count: ${user.aiRequestCount} today.`);
         }
-        // Note: Unauthenticated users are implicitly handled by authenticateToken on /api/tests/generate
+        // Note: Unauthenticated users are blocked by authenticateToken middleware on the route itself.
 
         next();
     } catch (err) {
         console.error('Error in checkAiLimit middleware:', err);
+        // Pass the error to the next error handling middleware
         next(err);
     }
 };
 
 // ==============================================
-// AutoTester.dev Specific API Routes
+// AutoTester.dev Specific API Routes (New/Updated)
 // ==============================================
 
 // POST /api/tests/generate - Trigger AI test generation
-app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res) => {
+app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res, next) => {
     try {
         // Inputs from the client UI based on README TODO
         const { docLink, appUrl, model = 'gemini-pro' } = req.body; // Default to a Gemini model
@@ -153,12 +185,22 @@ app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res
 
         // 1. Fetch content from the documentation link
         console.log(`Fetching content from documentation link: ${docLink}`);
-        const docContent = await fetchPageContent(docLink);
-
-        if (!docContent) {
-            // Optionally allow proceeding without documentation, or return an error
-            console.warn(`Could not fetch content from documentation link: ${docLink}`);
-            // return res.status(400).json({ error: `Could not fetch content from documentation link: ${docLink}` });
+        let docContent = null;
+        try {
+            docContent = await fetchPageContent(docLink);
+            if (!docContent) {
+                console.warn(
+                    `Could not fetch content from documentation link: ${docLink}. Proceeding without doc content.`
+                );
+                // It's acceptable to proceed without documentation if the AI can work from URL alone
+            }
+        } catch (fetchError) {
+            console.error(
+                `Failed to fetch content from documentation link ${docLink}:`,
+                fetchError.message
+            );
+            // Log error but still try to generate based on URL if docContent is null
+            console.warn(`Proceeding with null documentation content due to fetch error.`);
         }
 
         // 2. Construct a detailed prompt for Gemini
@@ -172,18 +214,21 @@ app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res
         - a 'description' (string, explaining the goal of the test)
         - a 'steps' array (array of objects, each object representing a test step)
         Each step object should include:
-        - 'action' (string, e.g., "navigate", "click", "type", "assert")
+        - 'action' (string, e.g., "navigate", "click", "type", "assert", "wait")
         - 'selector' (string, CSS selector or similar, for elements to interact with, if applicable)
         - 'value' (string, value to type or text to assert, if applicable)
         - 'expected' (string, expected outcome or state after the step, for assertions)
+        - 'optional' (boolean, true if step failure should not stop the test, default: false)
 
+        Ensure the first step of each test case is always to navigate to the appUrl.
         Focus on generating realistic user flows and edge cases based on the documentation.
         Consider common web application interactions like navigation, form submission, button clicks, link clicks, text verification, etc.
+        If documentation content is unavailable or minimal, generate basic smoke tests based on the URL structure and common web elements.
 
         Target Web Application URL: ${appUrl}
 
         Documentation Content:
-        ${docContent ? docContent : 'No documentation content fetched.'}
+        ${docContent ? docContent : 'No documentation content available.'}
 
         Generate the JSON test plan:`;
 
@@ -193,145 +238,282 @@ app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res
         // 3. Call the AI model (Gemini)
         const aiResponse = await generateAIResponse(prompt, model, 0.7);
 
+        if (!aiResponse) {
+            throw new Error('AI model returned no response.');
+        }
+
         // 4. Attempt to extract and parse the JSON test plan from the AI response
         let testPlanJson;
         try {
-            testPlanJson = JSON.parse(extractCodeSnippet(aiResponse));
+            const jsonString = extractCodeSnippet(aiResponse);
+            testPlanJson = JSON.parse(jsonString);
             // Basic validation of the expected JSON structure
-            if (!Array.isArray(testPlanJson) || !testPlanJson.every(tc => tc.name && Array.isArray(tc.steps))) {
-                 throw new Error('AI response did not return the expected JSON structure for test cases.');
+            if (
+                !Array.isArray(testPlanJson) ||
+                testPlanJson.length === 0 ||
+                !testPlanJson.every(
+                    (tc) =>
+                        typeof tc.name === 'string' &&
+                        Array.isArray(tc.steps) &&
+                        tc.steps.length > 0 &&
+                        tc.steps.every(
+                            (step) => typeof step.action === 'string' // Basic step validation
+                        )
+                )
+            ) {
+                console.warn(
+                    'AI response did not return the exact expected JSON structure for test cases:',
+                    JSON.stringify(testPlanJson, null, 2)
+                );
+                // Decide how strict validation should be. For now, allow it if it's an array of objects with 'name' and 'steps' array.
+                if (!Array.isArray(testPlanJson)) {
+                    throw new Error('AI response is not a JSON array.');
+                }
+                if (testPlanJson.length === 0) {
+                    // Allow empty array? Or require at least one test case? Let's require at least one.
+                    throw new Error('AI response JSON array is empty.');
+                }
+                if (
+                    !testPlanJson.every(
+                        (tc) => typeof tc.name === 'string' && Array.isArray(tc.steps)
+                    )
+                ) {
+                    throw new Error(
+                        'Some items in the AI response array are not valid test case objects (missing name or steps array).'
+                    );
+                }
+                // If we reach here, it's an array of objects with name and steps, but maybe steps aren't fully validated.
+                // Log a warning but proceed with the parsed data.
             }
+            console.log('Successfully parsed AI response into JSON test plan.');
         } catch (parseError) {
             console.error('Failed to parse or validate AI response as JSON:', parseError);
             console.log('Raw AI Response:', aiResponse); // Log raw response for debugging
-            return res
-                .status(500)
-                .json({ error: 'Failed to generate valid test plan from AI.', rawAiResponse: aiResponse });
+            return res.status(500).json({
+                error: 'Failed to generate valid test plan from AI. AI response was not parseable JSON or did not match expected structure.',
+                rawAiResponse: aiResponse
+            });
         }
 
-        // 5. Placeholder: Save the generated test plan to DB (Needs TestPlan model)
-        // const newTestPlan = new TestPlan({
-        //     userId: req.user.id,
-        //     docLink,
-        //     appUrl,
-        //     modelUsed: model,
-        //     plan: testPlanJson,
-        //     createdAt: new Date()
-        // });
-        // await newTestPlan.save();
+        // 5. Save the generated test plan to DB (Using the imported TestCase model)
+        const newTestPlan = new TestCase({
+            userId: req.user.id,
+            docLink,
+            appUrl,
+            modelUsed: model,
+            plan: testPlanJson, // Store the generated JSON structure
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+        await newTestPlan.save();
+        console.log(`Test plan saved with ID: ${newTestPlan._id}`);
 
-        // 6. Return a success response with the generated plan
+        // 6. Return a success response with the generated plan and ID
         res.status(201).json({
-            message: 'Test plan generated successfully (placeholder)',
-            // testPlanId: newTestPlan._id, // Return ID if saving to DB
-            generatedPlan: testPlanJson, // Return the generated plan
-            rawAiResponse: aiResponse // Include raw AI response for debugging
+            message: 'Test plan generated and saved successfully.',
+            testPlanId: newTestPlan._id,
+            generatedPlan: testPlanJson,
+            rawAiResponse: process.env.NODE_ENV === 'development' ? aiResponse : undefined // Include raw AI response in dev for debugging
         });
     } catch (error) {
         console.error('Error generating test plan:', error);
-        res.status(500).json({ error: 'Failed to generate test plan', details: error.message });
+        // Pass the error to the next error handling middleware
+        next(error);
     }
 });
 
 // POST /api/tests/:id/run - Trigger test execution
-app.post('/api/tests/:id/run', authenticateToken, checkAiLimit, async (req, res) => {
+app.post('/api/tests/:id/run', authenticateToken, async (req, res, next) => {
     try {
-        const testId = req.params.id;
-        // This is a placeholder. Actual implementation would:
-        // 1. Retrieve the test plan from the database using testId. (Needs TestPlan model)
-        // 2. Queue or trigger the test execution engine (e.g., a separate service using Puppeteer/Playwright).
-        // 3. The execution engine would run the test steps on the target URL.
-        // 4. Results (pass/fail, logs, screenshots) would be stored, likely in a new TestReport document. (Needs TestReport model)
+        const testPlanId = req.params.id;
+
+        // 1. Retrieve the test plan from the database using testPlanId.
+        // Use the imported TestCase model
+        const testPlan = await TestCase.findById(testPlanId);
+        if (!testPlan) {
+            return res.status(404).json({ error: 'Test plan not found' });
+        }
+        // 2. Check ownership or admin status
+        if (testPlan.userId.toString() !== req.user.id && !req.user.isAdmin) {
+            return res.status(403).json({ error: 'Unauthorized: You do not own this test plan' });
+        }
+
+        console.log(`Triggering test run for test plan ID: ${testPlanId}`);
+
+        // 3. Create a new TestReport entry (Using the imported TestReport model)
+        const newTestReport = new TestReport({
+            testPlanId: testPlan._id,
+            userId: req.user.id, // Store user ID on report for easy lookup
+            status: 'queued', // Initial status
+            startTime: new Date(), // Start time of the *request*, execution engine sets actual start time
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+        await newTestReport.save();
+        console.log(`Test report created with ID: ${newTestReport._id}, status: queued`);
+
+        // 4. Queue or trigger the test execution engine.
+        // THIS IS A PLACEHOLDER. Actual implementation requires a separate service
+        // (e.g., a worker process using Puppeteer/Playwright) that picks up 'queued' reports,
+        // executes the steps from the associated TestPlan, updates the report status and results.
+        console.warn(
+            `TODO: Implement actual test execution logic for report ${newTestReport._id}. Requires a separate execution engine.`
+        );
+        // Example: Send a message to a queue or call an internal execution service API
+        // await triggerTestExecutionService(newTestReport._id);
+
         // 5. Return a response indicating the test run has started (e.g., run ID).
-
-        // Placeholder: Find test plan (assuming a TestPlan model exists)
-        // const testPlan = await TestPlan.findById(testId);
-        // if (!testPlan) {
-        //     return res.status(404).json({ error: 'Test plan not found' });
-        // }
-        // // Check ownership or admin status
-        // if (testPlan.userId.toString() !== req.user.id && !req.user.isAdmin) {
-        //      return res.status(403).json({ error: 'Unauthorized: You do not own this test plan' });
-        // }
-
-        console.log(`Triggering test run for test ID: ${testId}. Execution engine needed here.`);
-
-        // Placeholder: Trigger execution engine (This function needs to be implemented elsewhere)
-        // await triggerTestExecution(testPlan); // Function to interact with execution service
-
-        // Placeholder: Create a new TestReport entry (assuming a TestReport model exists)
-        // const newTestReport = new TestReport({
-        //     testPlanId: testId,
-        //     userId: req.user.id,
-        //     status: 'queued', // or 'running'
-        //     startTime: new Date()
-        // });
-        // await newTestReport.save();
-
         res.status(202).json({
-            message: 'Test run initiated successfully (placeholder - execution engine required)'
-            // runId: newTestReport._id // Return run ID if saving to DB
+            message: 'Test run initiated and queued successfully.',
+            runId: newTestReport._id,
+            testPlanId: testPlan._id,
+            status: newTestReport.status
         });
     } catch (error) {
         console.error('Error initiating test run:', error);
-        res.status(500).json({ error: 'Failed to initiate test run', details: error.message });
+        // Pass the error to the next error handling middleware
+        next(error);
     }
 });
 
 // GET /api/tests/:id - Get a specific test plan or report
-app.get('/api/tests/:id', authenticateToken, async (req, res) => {
+app.get('/api/tests/:id', authenticateToken, async (req, res, next) => {
     try {
-        const testId = req.params.id;
-        // This is a placeholder. Actual implementation would:
-        // 1. Retrieve a TestPlan or TestReport document by ID. (Needs TestPlan/TestReport models)
-        // 2. Ensure the user has access (is the owner or an admin).
-        // 3. Return the document.
+        const documentId = req.params.id;
 
-        // Placeholder: Find TestPlan or TestReport
-        // const testDocument = await TestPlan.findById(testId) || await TestReport.findById(testId); // Could be either
-        // if (!testDocument) {
-        //     return res.status(404).json({ error: 'Test or Report not found' });
-        // }
-        // // Check ownership or admin status
-        // if (testDocument.userId.toString() !== req.user.id && !req.user.isAdmin) {
-        //      return res.status(403).json({ error: 'Unauthorized access' });
-        // }
+        // Attempt to find it as a TestReport first
+        // Use the imported TestReport model and populate the associated TestCase
+        let document = await TestReport.findById(documentId).populate('testPlanId');
+        let docType = 'report';
 
-        console.log(`Fetching details for test/report ID ${testId} (placeholder)`);
+        if (!document) {
+            // If not found as a Report, try finding it as a TestPlan (TestCase model)
+            // Use the imported TestCase model
+            document = await TestCase.findById(documentId);
+            docType = 'plan';
+        }
 
-        // Placeholder response
+        if (!document) {
+            return res.status(404).json({ error: 'Test Plan or Report not found' });
+        }
+
+        // Check ownership or admin status
+        // For a report, check the userId on the report
+        // For a plan (TestCase), check the userId on the plan
+        const documentUserId = document.userId
+            ? document.userId.toString() // For TestCase or TestReport found directly
+            : document.testPlanId?.userId // For TestReport where testPlanId was populated
+              ? document.testPlanId.userId.toString()
+              : null; // Should not happen if models are linked correctly
+
+        if (!documentUserId || (documentUserId !== req.user.id && !req.user.isAdmin)) {
+            return res.status(403).json({ error: 'Unauthorized access' });
+        }
+
+        console.log(`Fetching details for ${docType} ID ${documentId} for user ${req.user.id}`);
+
         res.status(200).json({
-            message: `Details for test/report ID ${testId} (placeholder - requires DB models)`
-            // data: testDocument // Return actual data if found
+            message: `Successfully retrieved ${docType} details.`,
+            type: docType,
+            data: document
         });
     } catch (error) {
-        console.error('Error fetching test/report:', error);
-        res.status(500).json({ error: 'Failed to fetch test/report', details: error.message });
+        console.error('Error fetching test plan/report:', error);
+        // Pass the error to the next error handling middleware
+        next(error);
     }
 });
 
-// GET /api/tests - List test plans or reports for the user
-app.get('/api/tests', authenticateToken, async (req, res) => {
+// GET /api/tests - List test plans and reports for the user
+app.get('/api/tests', authenticateToken, async (req, res, next) => {
     try {
-        // This is a placeholder. Actual implementation would:
-        // 1. Retrieve TestPlan or TestReport documents for the logged-in user. (Needs DB models)
-        // 2. Apply filtering/sorting from query parameters (e.g., status, date, search).
-        // 3. Return a list of documents (potentially paginated or limited).
+        const userId = req.user.id;
+        const { type, status, search, limit = 100, skip = 0 } = req.query; // Add basic filtering/pagination
 
-        // Placeholder: Find documents for user
-        // const userTestsOrReports = await TestPlan.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(100); // Example
-        // Or find TestReports: await TestReport.find({ userId: req.user.id }).sort({ startTime: -1 }).limit(100);
+        const reportQuery = { userId: userId };
+        if (status) reportQuery.status = status; // Filter reports by status
 
-        console.log(`Fetching tests/reports for user ${req.user.id} (placeholder)`);
+        // Fetch Test Plans (using TestCase model)
+        let plans = [];
+        if (!type || type === 'plan') {
+            const planFilter = { userId: userId };
+            // Add search to plan filter if applicable (e.g., on docLink, appUrl)
+            if (search) {
+                const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+                planFilter.$or = [
+                    { docLink: searchRegex },
+                    { appUrl: searchRegex }
+                    // Searching within the 'plan' array structure is complex/inefficient in MongoDB without text index.
+                    // Maybe only search on metadata for now, or add text index to the 'plan' field if needed and performance allows.
+                    // For now, let's keep it simple and only search docLink/appUrl.
+                ];
+            }
 
-        // Placeholder response
+            plans = await TestCase.find(planFilter)
+                .sort({ createdAt: -1 })
+                .limit(parseInt(limit))
+                .skip(parseInt(skip))
+                .lean(); // Use lean() for performance if not modifying docs
+        }
+
+        // Fetch Test Reports (using TestReport model)
+        let reports = [];
+        if (!type || type === 'report') {
+            const reportFilter = { userId: userId };
+            if (status) reportFilter.status = status;
+
+            // Add search to report filter if applicable
+            if (search) {
+                const searchRegex = new RegExp(search, 'i');
+                // Search on linked test plan's docLink or appUrl
+                // This requires populating and then filtering in memory or using $lookup in aggregation
+                // In-memory filtering after population is simpler for basic cases
+                reports = await TestReport.find(reportFilter)
+                    .populate('testPlanId', 'docLink appUrl') // Populate linked plan info
+                    .sort({ createdAt: -1 })
+                    .limit(parseInt(limit))
+                    .skip(parseInt(skip))
+                    .lean();
+
+                reports = reports.filter(
+                    (r) =>
+                        r.testPlanId &&
+                        (r.testPlanId.docLink.match(searchRegex) ||
+                            r.testPlanId.appUrl.match(searchRegex) ||
+                            (r.results && JSON.stringify(r.results).match(searchRegex))) // Optional: search within results
+                );
+            } else {
+                // No search, just fetch and populate
+                reports = await TestReport.find(reportFilter)
+                    .populate('testPlanId', 'docLink appUrl') // Populate linked plan info
+                    .sort({ createdAt: -1 })
+                    .limit(parseInt(limit))
+                    .skip(parseInt(skip))
+                    .lean();
+            }
+        }
+
+        // Combine and sort if necessary, or return separately
+        // Combining and sorting can be done after fetching
+        const combinedList = plans
+            .map((p) => ({ ...p, type: 'plan' }))
+            .concat(reports.map((r) => ({ ...r, type: 'report' })));
+
+        // Sort combined list by creation date (most recent first)
+        combinedList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        console.log(
+            `Fetching tests/reports for user ${userId}. Found ${combinedList.length} documents.`
+        );
+
         res.status(200).json({
-            message: `List of tests/reports for user ${req.user.id} (placeholder - requires DB models)`
-            // data: userTestsOrReports.map(doc => ({ id: doc._id, ... })) // Return summary data
+            message: `Successfully retrieved tests and reports for user ${userId}.`,
+            data: combinedList
         });
     } catch (error) {
         console.error('Error fetching user tests/reports:', error);
-        res.status(500).json({ error: 'Failed to fetch tests/reports', details: error.message });
+        // Pass the error to the next error handling middleware
+        next(error);
     }
 });
 
@@ -339,12 +521,16 @@ app.get('/api/tests', authenticateToken, async (req, res) => {
 // Existing General API Routes (kept)
 // ==============================================
 
-// Feedback route (kept)
-app.post('/api/feedback', authenticateTokenOptional, async (req, res) => {
+// Feedback route (kept, uses local Feedback schema)
+app.post('/api/feedback', authenticateTokenOptional, async (req, res, next) => {
     try {
         const { message, type } = req.body;
+        // Validate type
+        if (!['bug', 'feature', 'general'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid feedback type' });
+        }
         const feedback = new Feedback({
-            userId: req?.user?.id,
+            userId: req?.user?.id, // Will be null for unauthenticated users
             message,
             type,
             createdAt: new Date()
@@ -353,7 +539,7 @@ app.post('/api/feedback', authenticateTokenOptional, async (req, res) => {
         res.status(201).json(feedback);
     } catch (error) {
         console.error('Error saving feedback:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
@@ -374,24 +560,28 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
             case 'customer.subscription.deleted': {
                 const subscription = event.data.object;
                 console.log('Subscription Event:', subscription.id, 'Status:', subscription.status);
+                // Retrieve customer details using the customer ID from the subscription object
                 const customer = await stripe.customers.retrieve(subscription.customer);
                 if (!customer || !customer.email) {
                     console.error(
                         `Customer not found or missing email for subscription ${subscription.id}`
                     );
-                    return res.status(400).send('Customer not found');
+                    // Depending on flow, might create user here or just log
+                    break;
                 }
+                // Find the user by email and update their subscription status
                 const user = await User.findOneAndUpdate(
                     { email: customer.email },
                     {
                         subscriptionStatus: subscription.status,
-                        subscriptionId: subscription.id
+                        subscriptionId: subscription.id, // Store the subscription ID
+                        customerId: customer.id // Store the customer ID
                     },
-                    { new: true } // Return the updated document
+                    { new: true, upsert: true } // Create user if not found, return the updated/created document
                 );
                 if (!user) {
-                    console.error(`User not found for email ${customer.email}`);
-                    // Depending on flow, might create user here or just log
+                    // This case should ideally not be hit with upsert: true, but good for logging
+                    console.error(`User update/creation failed for email ${customer.email}`);
                     break;
                 }
                 console.log(
@@ -405,7 +595,23 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
                 break;
             }
-            // Add other Stripe event types if needed (e.g., invoice.payment_succeeded)
+            case 'invoice.payment_succeeded': {
+                const invoice = event.data.object;
+                console.log(
+                    'Invoice Payment Succeeded:',
+                    invoice.id,
+                    'Customer:',
+                    invoice.customer
+                );
+                // Logic to handle successful payments, e.g., update user status, send confirmation
+                break;
+            }
+            case 'invoice.payment_failed': {
+                const invoice = event.data.object;
+                console.log('Invoice Payment Failed:', invoice.id, 'Customer:', invoice.customer);
+                // Logic to handle failed payments, e.g., notify user, update status
+                break;
+            }
             default:
                 console.log(`Unhandled Stripe event type ${event.type}`);
         }
@@ -418,7 +624,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 });
 
 // Docs route (kept)
-app.get('/api/docs', async (req, res) => {
+app.get('/api/docs', async (req, res, next) => {
     try {
         const search = req.query.search ? req.query.search.toLowerCase() : '';
         const categoryQuery =
@@ -429,29 +635,47 @@ app.get('/api/docs', async (req, res) => {
         const docsPath = join(__dirname, '../docs');
         let filenames = [];
         try {
-             filenames = await fsPromises.readdir(docsPath);
+            // Check if directory exists before reading
+            await fsPromises.access(docsPath);
+            filenames = await fsPromises.readdir(docsPath);
         } catch (readDirError) {
-            console.warn(`Docs directory not found or readable at ${docsPath}:`, readDirError.message);
-            return res.json([]); // Return empty array if docs directory doesn't exist
+            // If directory doesn't exist or isn't readable, return empty array
+            if (readDirError.code === 'ENOENT') {
+                console.warn(`Docs directory not found at ${docsPath}.`);
+                return res.json([]); // Return empty array if docs directory doesn't exist
+            }
+            console.error(`Error reading docs directory at ${docsPath}:`, readDirError.message);
+            throw readDirError; // Re-throw other errors
         }
 
         const docsData = await Promise.all(
             filenames.map(async (filename) => {
                 const filePath = join(docsPath, filename);
                 // Check if it's a markdown file and not a directory
-                const stat = await fsPromises.stat(filePath);
-                if (!filename.endsWith('.md') || stat.isDirectory()) return null;
+                try {
+                    const stat = await fsPromises.stat(filePath);
+                    if (!filename.endsWith('.md') || stat.isDirectory()) return null;
+                } catch (statError) {
+                    console.warn(`Could not stat file ${filePath}:`, statError.message);
+                    return null; // Skip files that cannot be stat'd
+                }
 
-                const content = await fsPromises.readFile(filePath, 'utf8');
-                const title = filename.replace(/\.md$/, '').replace(/[_-]+/g, ' '); // Remove .md and replace separators
-                // Basic category extraction - could be enhanced
-                const category = 'general'; // Placeholder, could parse from file path or content
+                try {
+                    const content = await fsPromises.readFile(filePath, 'utf8');
+                    const title = filename.replace(/\.md$/, '').replace(/[_-]+/g, ' '); // Remove .md and replace separators
+                    // Basic category extraction - could be enhanced (e.g., from frontmatter)
+                    // For now, use a default or try to infer from filename/path if structure allows
+                    const category = 'general'; // Placeholder, could parse from file path or content
 
-                return { title, category, content, filename };
+                    return { title, category, content, filename };
+                } catch (readFileError) {
+                    console.warn(`Could not read file ${filePath}:`, readFileError.message);
+                    return null; // Skip files that cannot be read
+                }
             })
         );
 
-        // Filter out non-markdown files and null results
+        // Filter out non-markdown files and null results from failed reads/stats
         let filteredDocs = docsData.filter((doc) => doc !== null);
 
         if (categoryQuery) {
@@ -472,9 +696,13 @@ app.get('/api/docs', async (req, res) => {
         res.json(filteredDocs);
     } catch (e) {
         console.error('Error fetching docs:', e);
-        res.status(500).json({ error: e.message });
+        next(e);
     }
 });
+
+// User and Admin routes
+userRoutes(app);
+adminRoutes(app); // Note: admin.js might fail without a 'Presentation' model
 
 // ==============================================
 // Static File Serving and Client-Side Routing Fallback
@@ -491,7 +719,8 @@ app.get('*', (req, res) => {
     }
     // Ensure the file exists before sending to prevent errors
     const indexPath = join(__dirname, '../dist/index.html');
-    fsPromises.access(indexPath)
+    fsPromises
+        .access(indexPath)
         .then(() => res.sendFile(indexPath))
         .catch(() => {
             console.error(`index.html not found at ${indexPath}`);
@@ -510,7 +739,7 @@ app.use('/api', (req, res) => {
 });
 
 // General error handler middleware
-app.use((err, req, res, next) => { // Added 'next' parameter
+app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err.stack);
     // Check if headers have already been sent
     if (res.headersSent) {
@@ -545,5 +774,7 @@ app.listen(port, () => {
 // In production, consider setting this via environment variables or secrets management
 if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     process.env['GOOGLE_APPLICATION_CREDENTIALS'] = './google.json';
-    console.warn('GOOGLE_APPLICATION_CREDENTIALS set to ./google.json. Ensure this is correct for your environment.');
+    console.warn(
+        'GOOGLE_APPLICATION_CREDENTIALS set to ./google.json. Ensure this is correct for your environment.'
+    );
 }

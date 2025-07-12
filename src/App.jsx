@@ -121,7 +121,13 @@ function App() {
                                             {/* Protect profile route - redirect if not logged in */}
                                             <Route
                                                 path="/profile"
-                                                element={user ? <Profile /> : <Navigate to="/login" replace />}
+                                                element={
+                                                    user ? (
+                                                        <Profile />
+                                                    ) : (
+                                                        <Navigate to="/login" replace />
+                                                    )
+                                                }
                                             />
                                             {/* Feedback route can be accessed by anyone */}
                                             <Route path="/feedback" element={<Feedback />} />
@@ -129,7 +135,13 @@ function App() {
                                             {/* Admin route - protect with admin check */}
                                             <Route
                                                 path="/admin"
-                                                element={user?.isAdmin ? <Admin /> : <Navigate to="/" replace />}
+                                                element={
+                                                    user?.isAdmin ? (
+                                                        <Admin />
+                                                    ) : (
+                                                        <Navigate to="/" replace />
+                                                    )
+                                                }
                                             />
 
                                             {/* Redirect unknown routes to home */}

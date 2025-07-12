@@ -1,5 +1,3 @@
-import { load } from 'cheerio'; // Although enrichMetadata is removed, cheerio might be useful for future utilities
-
 // Function to get IP address from request headers
 export const getIpFromRequest = (req) => {
     let ips = (
@@ -14,8 +12,7 @@ export const getIpFromRequest = (req) => {
 // Function to extract content from fenced code blocks
 export const extractCodeSnippet = (text) => {
     // Regex updated to be more general for code blocks
-    const codeBlockRegex =
-        /```(?:[a-zA-Z0-9]*)\n([\s\S]*?)\n```/;
+    const codeBlockRegex = /```(?:[a-zA-Z0-9]*)\n([\s\S]*?)\n```/;
     const match = text.match(codeBlockRegex);
     return match ? match[1] : text;
 };
