@@ -11,16 +11,13 @@ import compression from 'compression';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { getTextGemini } from './gemini.js';
-import { getTextGrok } from './grok.js';
-import { getTextGpt } from './openai.js';
-import { getTextDeepseek } from './deepseek.js';
-import { getTextClaude } from './claude.js';
+// Removed imports for other models as per README TODO
 import User from './models/User.js'; // Assuming User model is needed for Auth/Admin
-import Feedback from './models/Feedback.js'; // Assuming Feedback model is needed
-// Note: Presentation model is removed as it's not relevant to AutoTester.dev README features
 import userRoutes from './user.js';
 import adminRoutes from './admin.js';
 import { authenticateToken, authenticateTokenOptional } from './middleware/auth.js';
+import { fetchPageContent } from './search.js'; // Import utility to fetch web content
+import { extractCodeSnippet } from './utils.js'; // Import utility to extract code
 
 dotenv.config();
 
@@ -48,7 +45,7 @@ const metricsMiddleware = promBundle({
     customLabels: { model: 'No' },
     transformLabels: (labels, req) => {
         // Assuming AI model usage is primarily in /api/tests/generate or similar
-        labels.model = req?.body?.model ?? 'No';
+        labels.model = req?.body?.model ?? 'No'; // Capture model used for generation
         return labels;
     }
 });
@@ -73,37 +70,21 @@ if (process.env.NODE_ENV === 'production') {
 
 mongoose.connect(process.env.MONGODB_URI, {});
 
-// User and Admin routes (keeping these as they are general platform features)
+// User and Admin routes
 userRoutes(app);
 adminRoutes(app);
 
-// AI Response Generation (utility function, not a direct route)
+// AI Response Generation (utility function, now only uses Gemini)
 const generateAIResponse = async (prompt, model, temperature = 0.7) => {
-    switch (model) {
-        case 'o3-mini':
-        case 'gpt-4o-mini':
-        case 'gpt-4o': // Added gpt-4o based on common usage
-        case 'gpt-3.5-turbo': // Added gpt-3.5-turbo
-            return await getTextGpt(prompt, model, temperature);
-        case 'gemini-2.0-pro-exp-02-05':
-        case 'gemini-2.0-flash-001':
-        case 'gemini-2.0-flash-thinking-exp-01-21':
-        case 'gemini-pro': // Added gemini-pro
-        case 'gemini-flash': // Added gemini-flash
-            return await getTextGemini(prompt, model, temperature);
-        case 'deepseek-reasoner':
-        case 'deepseek-coder': // Added deepseek-coder
-            return await getTextDeepseek(prompt, model, temperature);
-        case 'claude-3-7-sonnet-20250219':
-        case 'claude-3-opus-20240229': // Added claude-opus
-        case 'claude-3-sonnet-20240229': // Added claude-sonnet
-        case 'claude-3-haiku-20240307': // Added claude-haiku
-            return await getTextClaude(prompt, model, temperature);
-        case 'grok-2-latest':
-        case 'grok-3-mini':
-            return await getTextGrok(prompt, model, temperature);
-        default:
-            throw new Error('Invalid model specified');
+    // As per README, only Gemini is used for core AI features
+    // Validate that the requested model is a Gemini model if necessary, or rely on getTextGemini
+    // which is expected to handle valid Gemini model names.
+    // For now, we assume the model parameter passed is a valid Gemini model name expected by getTextGemini.
+    try {
+        return await getTextGemini(prompt, model, temperature);
+    } catch (error) {
+        console.error(`Error calling Gemini model ${model}:`, error);
+        throw new Error(`Failed to get response from AI model ${model}`);
     }
 };
 
@@ -120,8 +101,6 @@ export const getIpFromRequest = (req) => {
 // Middleware to check AI usage limits for free users
 export const checkAiLimit = async (req, res, next) => {
     try {
-        // This middleware is only relevant for routes that consume significant AI resources
-        // Apply it selectively to test generation/execution routes
         const user = req.user ? await User.findById(req.user.id) : null;
 
         // If user is logged in and not subscribed/trialing
@@ -133,10 +112,10 @@ export const checkAiLimit = async (req, res, next) => {
             const now = new Date();
             const lastRequest = user.lastAiRequestTime ? new Date(user.lastAiRequestTime) : null;
 
-            // Check if the last request was today
+            // Check if the last request was today (resets daily limit)
             if (lastRequest && now.toDateString() === lastRequest.toDateString()) {
                 if (user.aiRequestCount >= 3) {
-                    // Limit to 3 requests per day for free users
+                    // Limit to 3 requests per day for free users for AI-intensive tasks
                     return res.status(429).json({
                         error: 'Daily AI usage limit reached. Please upgrade for unlimited access.'
                     });
@@ -148,13 +127,8 @@ export const checkAiLimit = async (req, res, next) => {
                 user.lastAiRequestTime = now;
             }
             await user.save();
-        } else if (!user) {
-            // Optional: Handle unauthenticated users if they are allowed limited AI access
-            // For now, assume AI features require auth, or implement IP-based limiting here
-            // console.log('AI request from unauthenticated user. Consider IP limiting.');
-            // If unauthenticated users are not allowed AI features, add a check here.
-            // return res.status(401).json({ error: 'Authentication required for this feature.' });
         }
+        // Note: Unauthenticated users are implicitly handled by authenticateToken on /api/tests/generate
 
         next();
     } catch (err) {
@@ -163,74 +137,95 @@ export const checkAiLimit = async (req, res, next) => {
     }
 };
 
-// Utility functions (keeping these, although they might not be directly used in index.js anymore)
-const extractCodeSnippet = (text) => {
-    const codeBlockRegex = /```(?:json|js|html)?\n([\s\S]*?)\n```/;
-    const match = text.match(codeBlockRegex);
-    return match ? match[1] : text;
-};
-
 // ==============================================
 // AutoTester.dev Specific API Routes
 // ==============================================
 
-// Placeholder routes for AutoTester.dev features
-// These would interact with database models for Tests/Reports and potentially an execution engine
-
 // POST /api/tests/generate - Trigger AI test generation
 app.post('/api/tests/generate', authenticateToken, checkAiLimit, async (req, res) => {
     try {
-        // This is a placeholder. Actual implementation would:
-        // 1. Parse user input (e.g., URL, description, user flow).
-        // 2. Use AI models (via generateAIResponse) to create a test plan (e.g., a sequence of steps, assertions).
-        // 3. Save the test plan to the database (needs a TestPlan model).
-        // 4. Return the generated test plan ID or details.
+        // Inputs from the client UI based on README TODO
+        const { docLink, appUrl, model = 'gemini-pro' } = req.body; // Default to a Gemini model
 
-        const { url, description, flow, model } = req.body;
-
-        if (!url || !description || !model) {
-            return res.status(400).json({ error: 'URL, description, and model are required.' });
+        if (!docLink || !appUrl) {
+            return res.status(400).json({ error: 'Documentation link and App URL are required.' });
         }
 
-        // Example AI prompt construction (simplified)
-        const prompt = `Generate a test plan (in JSON format) for the web application at ${url} based on the following description and user flow:\n\nDescription: ${description}\nUser Flow: ${flow || 'Default user flow'}\n\nThe test plan should include steps and expected outcomes.`;
+        // 1. Fetch content from the documentation link
+        console.log(`Fetching content from documentation link: ${docLink}`);
+        const docContent = await fetchPageContent(docLink);
 
-        console.log(`Generating test plan for ${url} using model ${model}`);
+        if (!docContent) {
+            // Optionally allow proceeding without documentation, or return an error
+            console.warn(`Could not fetch content from documentation link: ${docLink}`);
+            // return res.status(400).json({ error: `Could not fetch content from documentation link: ${docLink}` });
+        }
 
-        // Call the AI model
+        // 2. Construct a detailed prompt for Gemini
+        // The prompt instructs Gemini to act as a QA expert and generate test cases
+        // based on the documentation and the target web application URL.
+        // It should request the output in a structured format (e.g., JSON).
+        const prompt = `As an AI QA expert, analyze the following documentation content and the target web application URL to generate a comprehensive test plan.
+        The test plan should be provided as a JSON object containing an array of test cases.
+        Each test case should include:
+        - a 'name' (string, e.g., "Verify user login")
+        - a 'description' (string, explaining the goal of the test)
+        - a 'steps' array (array of objects, each object representing a test step)
+        Each step object should include:
+        - 'action' (string, e.g., "navigate", "click", "type", "assert")
+        - 'selector' (string, CSS selector or similar, for elements to interact with, if applicable)
+        - 'value' (string, value to type or text to assert, if applicable)
+        - 'expected' (string, expected outcome or state after the step, for assertions)
+
+        Focus on generating realistic user flows and edge cases based on the documentation.
+        Consider common web application interactions like navigation, form submission, button clicks, link clicks, text verification, etc.
+
+        Target Web Application URL: ${appUrl}
+
+        Documentation Content:
+        ${docContent ? docContent : 'No documentation content fetched.'}
+
+        Generate the JSON test plan:`;
+
+        console.log(`Sending prompt to AI model ${model} for test generation.`);
+        // console.log("Prompt:", prompt); // Log prompt for debugging if needed
+
+        // 3. Call the AI model (Gemini)
         const aiResponse = await generateAIResponse(prompt, model, 0.7);
 
-        // Attempt to extract JSON code snippet
+        // 4. Attempt to extract and parse the JSON test plan from the AI response
         let testPlanJson;
         try {
             testPlanJson = JSON.parse(extractCodeSnippet(aiResponse));
+            // Basic validation of the expected JSON structure
+            if (!Array.isArray(testPlanJson) || !testPlanJson.every(tc => tc.name && Array.isArray(tc.steps))) {
+                 throw new Error('AI response did not return the expected JSON structure for test cases.');
+            }
         } catch (parseError) {
-            console.error('Failed to parse AI response as JSON:', parseError);
-            console.log('AI Response:', aiResponse);
-            // Fallback or error handling if AI doesn't return valid JSON
+            console.error('Failed to parse or validate AI response as JSON:', parseError);
+            console.log('Raw AI Response:', aiResponse); // Log raw response for debugging
             return res
                 .status(500)
-                .json({ error: 'Failed to generate valid test plan from AI.', aiResponse });
+                .json({ error: 'Failed to generate valid test plan from AI.', rawAiResponse: aiResponse });
         }
 
-        // Placeholder: Save the generated test plan to DB
+        // 5. Placeholder: Save the generated test plan to DB (Needs TestPlan model)
         // const newTestPlan = new TestPlan({
         //     userId: req.user.id,
-        //     url,
-        //     description,
-        //     flow,
+        //     docLink,
+        //     appUrl,
         //     modelUsed: model,
         //     plan: testPlanJson,
         //     createdAt: new Date()
         // });
         // await newTestPlan.save();
 
-        // Return a success response with the generated plan (or ID)
+        // 6. Return a success response with the generated plan
         res.status(201).json({
             message: 'Test plan generated successfully (placeholder)',
-            // testPlanId: newTestPlan._id,
-            generatedPlan: testPlanJson, // Returning the generated plan for demonstration
-            aiResponse: aiResponse // Include raw AI response for debugging
+            // testPlanId: newTestPlan._id, // Return ID if saving to DB
+            generatedPlan: testPlanJson, // Return the generated plan
+            rawAiResponse: aiResponse // Include raw AI response for debugging
         });
     } catch (error) {
         console.error('Error generating test plan:', error);
@@ -243,10 +238,10 @@ app.post('/api/tests/:id/run', authenticateToken, checkAiLimit, async (req, res)
     try {
         const testId = req.params.id;
         // This is a placeholder. Actual implementation would:
-        // 1. Retrieve the test plan from the database using testId.
-        // 2. Queue or trigger the test execution engine (e.g., a separate service, Puppeteer/Playwright script).
+        // 1. Retrieve the test plan from the database using testId. (Needs TestPlan model)
+        // 2. Queue or trigger the test execution engine (e.g., a separate service using Puppeteer/Playwright).
         // 3. The execution engine would run the test steps on the target URL.
-        // 4. Results (pass/fail, logs, screenshots) would be stored, likely in a new TestReport document.
+        // 4. Results (pass/fail, logs, screenshots) would be stored, likely in a new TestReport document. (Needs TestReport model)
         // 5. Return a response indicating the test run has started (e.g., run ID).
 
         // Placeholder: Find test plan (assuming a TestPlan model exists)
@@ -254,13 +249,14 @@ app.post('/api/tests/:id/run', authenticateToken, checkAiLimit, async (req, res)
         // if (!testPlan) {
         //     return res.status(404).json({ error: 'Test plan not found' });
         // }
+        // // Check ownership or admin status
         // if (testPlan.userId.toString() !== req.user.id && !req.user.isAdmin) {
         //      return res.status(403).json({ error: 'Unauthorized: You do not own this test plan' });
         // }
 
-        console.log(`Triggering test run for test ID: ${testId}`);
+        console.log(`Triggering test run for test ID: ${testId}. Execution engine needed here.`);
 
-        // Placeholder: Trigger execution engine
+        // Placeholder: Trigger execution engine (This function needs to be implemented elsewhere)
         // await triggerTestExecution(testPlan); // Function to interact with execution service
 
         // Placeholder: Create a new TestReport entry (assuming a TestReport model exists)
@@ -273,8 +269,8 @@ app.post('/api/tests/:id/run', authenticateToken, checkAiLimit, async (req, res)
         // await newTestReport.save();
 
         res.status(202).json({
-            message: 'Test run initiated successfully (placeholder)'
-            // runId: newTestReport._id
+            message: 'Test run initiated successfully (placeholder - execution engine required)'
+            // runId: newTestReport._id // Return run ID if saving to DB
         });
     } catch (error) {
         console.error('Error initiating test run:', error);
@@ -287,7 +283,7 @@ app.get('/api/tests/:id', authenticateToken, async (req, res) => {
     try {
         const testId = req.params.id;
         // This is a placeholder. Actual implementation would:
-        // 1. Retrieve a TestPlan or TestReport document by ID.
+        // 1. Retrieve a TestPlan or TestReport document by ID. (Needs TestPlan/TestReport models)
         // 2. Ensure the user has access (is the owner or an admin).
         // 3. Return the document.
 
@@ -296,14 +292,17 @@ app.get('/api/tests/:id', authenticateToken, async (req, res) => {
         // if (!testDocument) {
         //     return res.status(404).json({ error: 'Test or Report not found' });
         // }
+        // // Check ownership or admin status
         // if (testDocument.userId.toString() !== req.user.id && !req.user.isAdmin) {
         //      return res.status(403).json({ error: 'Unauthorized access' });
         // }
 
+        console.log(`Fetching details for test/report ID ${testId} (placeholder)`);
+
         // Placeholder response
         res.status(200).json({
-            message: `Details for test/report ID ${testId} (placeholder)`
-            // data: testDocument
+            message: `Details for test/report ID ${testId} (placeholder - requires DB models)`
+            // data: testDocument // Return actual data if found
         });
     } catch (error) {
         console.error('Error fetching test/report:', error);
@@ -315,7 +314,7 @@ app.get('/api/tests/:id', authenticateToken, async (req, res) => {
 app.get('/api/tests', authenticateToken, async (req, res) => {
     try {
         // This is a placeholder. Actual implementation would:
-        // 1. Retrieve TestPlan or TestReport documents for the logged-in user.
+        // 1. Retrieve TestPlan or TestReport documents for the logged-in user. (Needs DB models)
         // 2. Apply filtering/sorting from query parameters (e.g., status, date, search).
         // 3. Return a list of documents (potentially paginated or limited).
 
@@ -323,11 +322,11 @@ app.get('/api/tests', authenticateToken, async (req, res) => {
         // const userTestsOrReports = await TestPlan.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(100); // Example
         // Or find TestReports: await TestReport.find({ userId: req.user.id }).sort({ startTime: -1 }).limit(100);
 
-        console.log(`Fetching tests/reports for user ${req.user.id}`);
+        console.log(`Fetching tests/reports for user ${req.user.id} (placeholder)`);
 
         // Placeholder response
         res.status(200).json({
-            message: `List of tests/reports for user ${req.user.id} (placeholder)`
+            message: `List of tests/reports for user ${req.user.id} (placeholder - requires DB models)`
             // data: userTestsOrReports.map(doc => ({ id: doc._id, ... })) // Return summary data
         });
     } catch (error) {
@@ -399,36 +398,11 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
                     `User ${user.email} subscription updated to ${user.subscriptionStatus}`
                 );
 
-                // Google Analytics event (assuming measurement_id is defined elsewhere or removed)
-                // const measurement_id = process.env.GA_MEASUREMENT_ID; // Need this env var
-                // const api_secret = process.env.GA_API_SECRET; // Need this env var
+                // Google Analytics event - commented out as per original code structure
+                // const measurement_id = process.env.GA_MEASUREMENT_ID;
+                // const api_secret = process.env.GA_API_SECRET;
+                // if (measurement_id && api_secret) { ... }
 
-                // if (measurement_id && api_secret) {
-                //      fetch(
-                //         `https://www.google-analytics.com/mp/collect?measurement_id=${measurement_id}&api_secret=${api_secret}`,
-                //         {
-                //             method: 'POST',
-                //             body: JSON.stringify({
-                //                 client_id: user._id.toString(), // Use user ID as client_id
-                //                 user_id: user._id.toString(),
-                //                 events: [
-                //                     {
-                //                         name: 'purchase', // Or 'subscription_status_update'
-                //                         params: {
-                //                             subscription_id: subscription.id,
-                //                             subscription_status: subscription.status,
-                //                             currency: subscription.currency, // Add currency if available
-                //                             value: subscription.plan?.amount / 100, // Add value if available
-                //                             // Add other relevant subscription details
-                //                         }
-                //                     }
-                //                 ]
-                //             })
-                //         }
-                //     ).catch(gaError => console.error('Failed to send GA event:', gaError));
-                // } else {
-                //     console.warn('Google Analytics Measurement ID or API Secret not configured.');
-                // }
                 break;
             }
             // Add other Stripe event types if needed (e.g., invoice.payment_succeeded)
@@ -451,13 +425,22 @@ app.get('/api/docs', async (req, res) => {
             req.query.category && req.query.category !== 'all'
                 ? req.query.category.toLowerCase()
                 : null;
-        const docsPath = join(__dirname, '../docs'); // Assuming docs are in a 'docs' folder parallel to 'server'
-        const filenames = await fsPromises.readdir(docsPath);
+        // Assuming docs are in a 'docs' folder parallel to 'server'
+        const docsPath = join(__dirname, '../docs');
+        let filenames = [];
+        try {
+             filenames = await fsPromises.readdir(docsPath);
+        } catch (readDirError) {
+            console.warn(`Docs directory not found or readable at ${docsPath}:`, readDirError.message);
+            return res.json([]); // Return empty array if docs directory doesn't exist
+        }
+
         const docsData = await Promise.all(
             filenames.map(async (filename) => {
                 const filePath = join(docsPath, filename);
-                // Check if it's a markdown file
-                if (!filename.endsWith('.md')) return null;
+                // Check if it's a markdown file and not a directory
+                const stat = await fsPromises.stat(filePath);
+                if (!filename.endsWith('.md') || stat.isDirectory()) return null;
 
                 const content = await fsPromises.readFile(filePath, 'utf8');
                 const title = filename.replace(/\.md$/, '').replace(/[_-]+/g, ' '); // Remove .md and replace separators
@@ -502,10 +485,18 @@ app.get('/api/docs', async (req, res) => {
 app.get('*', (req, res) => {
     // Check if the request is for a file that wasn't found by static middleware
     // This helps prevent sending index.html for missing static assets like CSS/JS/images
+    // Also checks if it's an API route that wasn't caught
     if (req.path.includes('.') && !req.path.startsWith('/api/')) {
         return res.status(404).send('Not Found');
     }
-    res.sendFile(join(__dirname, '../dist/index.html'));
+    // Ensure the file exists before sending to prevent errors
+    const indexPath = join(__dirname, '../dist/index.html');
+    fsPromises.access(indexPath)
+        .then(() => res.sendFile(indexPath))
+        .catch(() => {
+            console.error(`index.html not found at ${indexPath}`);
+            res.status(404).send('Client application not built.');
+        });
 });
 
 // ==============================================
@@ -519,8 +510,12 @@ app.use('/api', (req, res) => {
 });
 
 // General error handler middleware
-app.use((err, req, res) => {
+app.use((err, req, res, next) => { // Added 'next' parameter
     console.error('Unhandled Error:', err.stack);
+    // Check if headers have already been sent
+    if (res.headersSent) {
+        return next(err); // Delegate to default error handler if headers are sent
+    }
     res.status(err.status || 500).json({
         error: err.message || 'An unexpected error occurred',
         details: process.env.NODE_ENV === 'development' ? err.stack : undefined
@@ -531,13 +526,13 @@ app.use((err, req, res) => {
 process.on('uncaughtException', (err, origin) => {
     console.error(`Caught exception: ${err}`, `Exception origin: ${origin}`);
     // Consider graceful shutdown here in production
-    // process.exit(1);
+    // process.exit(1); // Exit with failure code
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     // Consider graceful shutdown here in production
-    // process.exit(1);
+    // process.exit(1); // Exit with failure code
 });
 
 // Start the server
@@ -545,5 +540,10 @@ app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
 
-// Set Google Application Credentials environment variable
-process.env['GOOGLE_APPLICATION_CREDENTIALS'] = './google.json';
+// Set Google Application Credentials environment variable (should be done before VertexAI initialization)
+// Ensure this is set correctly based on your deployment environment
+// In production, consider setting this via environment variables or secrets management
+if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    process.env['GOOGLE_APPLICATION_CREDENTIALS'] = './google.json';
+    console.warn('GOOGLE_APPLICATION_CREDENTIALS set to ./google.json. Ensure this is correct for your environment.');
+}

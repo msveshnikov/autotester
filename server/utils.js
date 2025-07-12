@@ -13,8 +13,9 @@ export const getIpFromRequest = (req) => {
 
 // Function to extract content from fenced code blocks
 export const extractCodeSnippet = (text) => {
+    // Regex updated to be more general for code blocks
     const codeBlockRegex =
-        /```(?:json|js|html|javascript|typescript|css|python|ruby|go|java|csharp|sh|bash|yaml|yml|markdown)?\n([\s\S]*?)\n```/;
+        /```(?:[a-zA-Z0-9]*)\n([\s\S]*?)\n```/;
     const match = text.match(codeBlockRegex);
     return match ? match[1] : text;
 };
@@ -27,7 +28,7 @@ export const slugify = (text) => {
         .toLowerCase()
         .trim()
         .replace(/\s+/g, '-') // Replace spaces with -
-        .replace(/[^\w-]+/g, '') // Remove all non-word chars
+        .replace(/[^\w-]+/g, '') // Remove all non-word chars except -
         .replace(/--+/g, '-'); // Replace multiple - with single -
 };
 
@@ -48,3 +49,6 @@ export const logError = (message, error, context = {}) => {
 
 // The previous enrichMetadata function from the Boiler.pro project is removed
 // as it is not relevant to the AutoTester.dev project context.
+
+// Add any other general utility functions here as needed by the server components.
+// For example, functions for data formatting, validation helpers, etc.

@@ -40,7 +40,7 @@ const theme = extendTheme({
 });
 
 function App() {
-    const [user, setUser] = useState();
+    const [user, setUser] = useState(undefined); // Use undefined initially to indicate loading
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -50,17 +50,33 @@ function App() {
                     Authorization: `Bearer ${token}`
                 }
             })
-                .then((res) => res.json())
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error('Profile fetch failed');
+                    }
+                    return res.json();
+                })
                 .then((data) => {
                     setUser(data);
                 })
                 .catch((error) => {
                     console.error('Failed to fetch profile:', error);
                     localStorage.removeItem('token'); // Remove invalid token
-                    setUser(null);
+                    setUser(null); // Set user to null on failure
                 });
+        } else {
+            setUser(null); // No token, set user to null immediately
         }
     }, []);
+
+    // Show loading indicator while user status is being determined
+    if (user === undefined) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                Loading user...
+            </Box>
+        );
+    }
 
     return (
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -73,7 +89,7 @@ function App() {
                             alignItems="center"
                             height="100vh"
                         >
-                            Loading...
+                            Loading application...
                         </Box>
                     }
                 >
@@ -84,25 +100,37 @@ function App() {
                                 <Container maxW="container.xl" py={8}>
                                     <VStack spacing={8}>
                                         <Routes>
+                                            {/* Landing page is the primary route */}
                                             <Route path="/" element={<Landing />} />
 
+                                            {/* Static pages */}
                                             <Route path="/privacy" element={<Privacy />} />
                                             <Route path="/terms" element={<Terms />} />
+                                            <Route path="/docs/*" element={<Docs />} />
+
+                                            {/* Authentication pages */}
                                             <Route path="/login" element={<Login />} />
                                             <Route path="/signup" element={<SignUp />} />
                                             <Route path="/forgot" element={<Forgot />} />
-                                            {/* Profile route requires authentication - implement protection if needed */}
-                                            <Route path="/profile" element={<Profile />} />
-                                            {/* Feedback route can be accessed by anyone */}
-                                            <Route path="/feedback" element={<Feedback />} />
                                             <Route
                                                 path="/reset-password/:token"
                                                 element={<Reset />}
                                             />
-                                            {/* Admin route requires admin privileges - implement protection */}
-                                            <Route path="/admin" element={<Admin />} />
-                                            {/* Docs route */}
-                                            <Route path="/docs/*" element={<Docs />} />
+
+                                            {/* User specific pages */}
+                                            {/* Protect profile route - redirect if not logged in */}
+                                            <Route
+                                                path="/profile"
+                                                element={user ? <Profile /> : <Navigate to="/login" replace />}
+                                            />
+                                            {/* Feedback route can be accessed by anyone */}
+                                            <Route path="/feedback" element={<Feedback />} />
+
+                                            {/* Admin route - protect with admin check */}
+                                            <Route
+                                                path="/admin"
+                                                element={user?.isAdmin ? <Admin /> : <Navigate to="/" replace />}
+                                            />
 
                                             {/* Redirect unknown routes to home */}
                                             <Route path="*" element={<Navigate to="/" replace />} />
@@ -110,6 +138,7 @@ function App() {
                                     </VStack>
                                 </Container>
                                 {/* Bottom navigation might need updates for AutoTester.dev specific routes */}
+                                {/* Consider conditionally rendering based on route if needed */}
                                 <BottomNavigationBar />
                             </Box>
                         </Router>

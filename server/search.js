@@ -1,30 +1,7 @@
 import { load } from 'cheerio';
 
-export const MAX_SEARCH_RESULT_LENGTH = 7000; // Maximum length of extracted content per page
-
-export async function searchWebContent(results) {
-    try {
-        // Fetch content for the first few relevant search results
-        const pageContents = await Promise.all(
-            results.slice(0, 3).map(async (result) => {
-                if (result.link) {
-                    return await fetchPageContent(result.link);
-                }
-                return null;
-            })
-        );
-        // Filter out null results and join the content, limiting the total size
-        const combinedContent = pageContents
-            ?.filter((content) => content !== null)
-            .join('\n')
-            .slice(0, MAX_SEARCH_RESULT_LENGTH * 2); // Combine content up to twice the max page length
-
-        return combinedContent;
-    } catch (e) {
-        console.error('Error in searchWebContent:', e);
-        return null;
-    }
-}
+// Maximum length of extracted content per page
+export const MAX_PAGE_CONTENT_LENGTH = 7000;
 
 // Common user agents to rotate to avoid blocking
 const userAgents = [
@@ -35,44 +12,17 @@ const userAgents = [
     'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0'
 ];
 
-export async function fetchSearchResults(query) {
-    try {
-        const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
-        // Using Bing as a search provider
-        const searchUrl = `https://bing.com/search?lang=en&q=${encodeURIComponent(query)}`;
-
-        const response = await fetch(searchUrl, { headers: { 'User-Agent': randomUserAgent } });
-        if (!response.ok) {
-            console.error(`Bing search failed with status: ${response.status}`);
-            return null;
-        }
-        const html = await response.text();
-        const $ = load(html);
-
-        const results = $('.b_algo')
-            .map((_, result) => {
-                const title = $(result).find('h2').text().trim();
-                const link = $(result).find('a').attr('href');
-                const snippet = $(result).find('.b_lineclamp2').text().trim();
-                // Basic validation for link and title
-                if (link && title) {
-                    return { title, link, snippet };
-                }
-                return null; // Skip invalid results
-            })
-            .get()
-            .filter((result) => result !== null); // Filter out null entries
-
-        return results;
-    } catch (error) {
-        console.error('Error fetching search results:', error);
-        return null;
-    }
-}
-
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
-const TIMEOUT = 10000; // 10 seconds
+const TIMEOUT = 15000; // 15 seconds
 
+/**
+ * Fetches the content of a given URL, extracts text, and performs basic cleaning.
+ * Skips large files, non-HTML content, and handles timeouts.
+ * This function is intended for fetching text content from documentation links or similar.
+ * It might not be suitable for detailed DOM analysis of the target application URL.
+ * @param {string} url - The URL to fetch.
+ * @returns {Promise<string|null>} - The extracted text content or null if fetching/processing fails.
+ */
 export async function fetchPageContent(url) {
     try {
         const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
@@ -124,7 +74,7 @@ export async function fetchPageContent(url) {
         const html = await response.text();
         const $ = load(html);
 
-        // Remove unwanted elements that clutter text extraction
+        // Remove unwanted elements that clutter text extraction, especially for documentation
         $('script, style, noscript, iframe, head, header, footer, nav').remove();
 
         // Extract text content, attempting to preserve some structure with line breaks
@@ -135,7 +85,7 @@ export async function fetchPageContent(url) {
         // Basic cleaning: replace multiple newlines/spaces with single ones, trim
         content = content.replace(/\s\s+/g, ' ').trim();
 
-        return content?.slice(0, MAX_SEARCH_RESULT_LENGTH);
+        return content?.slice(0, MAX_PAGE_CONTENT_LENGTH);
     } catch (error) {
         if (error.name === 'AbortError') {
             // Timeout already logged

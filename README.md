@@ -2,7 +2,7 @@
 
 First AI driven automatic test tool for webapps
 
-![alt text](image.png)
+![alt text](public/image.jpg)
 
 # PROD
 
@@ -28,9 +28,6 @@ and effort traditionally required for comprehensive testing.
   performance, and potential issues.
 - **User & Admin Management:** Secure user authentication and a dedicated admin panel for platform
   control.
-- **Multiple AI Engine Integration:** Utilize various AI models (OpenAI, Claude, DeepSeek, Gemini,
-  Grok, etc.) for diverse capabilities like natural language processing, semantic search, and
-  content analysis.
 
 ## Project Architecture
 
@@ -56,8 +53,7 @@ assets, facilitating maintainability and scalability.
 - **Server (server/):**
 
     - Authentication & administration: `admin.js`, `middleware/auth.js`, `user.js`
-    - AI and search integrations: `claude.js`, `deepseek.js`, `gemini.js`, `grok.js`, `openai.js`,
-      `search.js`
+    - AI and search integrations: `gemini.js`, `search.js`
     - Application entry point and schemata: `index.js`
     - Data Models: `models/Feedback.js`, `models/User.js`
     - Utility functions: `utils.js`
@@ -72,48 +68,65 @@ and supports independent scaling of different components.
 ## Design Ideas & Considerations
 
 To further enhance AutoTester.dev and its capabilities, the following design ideas and
-considerations are being explored:
+considerations are being explored, focusing on the core AI-driven test generation and execution
+workflow:
 
 - **Core AI Testing Workflow:**
 
-    - **Intuitive Test Creation:** Design user interfaces that allow users to define test scenarios
-      using natural language or visual flows, which are then translated into executable tests by AI.
-    - **Adaptive Element Locators:** Implement AI models that can analyze page structure and visual
-      cues to create more robust element locators that are less prone to breaking from minor HTML
+    - **Input Handling:** Design the main user interface (`Landing.jsx` or similar) to prominently
+      accept inputs like links to test/ticket documentation (JIRA, Confluence, etc.) and the URL of
+      the web application to be tested.
+    - **Intelligent Test Case Generation (via Gemini):** Develop server-side logic
+      (`server/index.js`, potentially new files) leveraging the integrated Gemini model
+      (`server/gemini.js`) to parse the provided documentation and web application URL. The AI
+      should analyze the content and structure to intelligently generate relevant test scenarios and
+      steps.
+    - **Adaptive Element Locators:** Implement AI models (potentially part of the Gemini interaction
+      or a separate module) that can analyze the target web application's DOM and visual structure
+      to create robust and resilient element locators, minimizing test fragility due to minor UI
       changes.
-    - **Smart Assertion Generation:** Develop AI capabilities to suggest or automatically generate
-      assertions based on expected outcomes or captured application states.
+    - **Automated Test Execution:** Develop server-side components to execute the generated test
+      cases against the target web application URL. This involves simulating user interactions based
+      on the generated steps.
+    - **Smart Assertion Generation:** Enhance the AI's capability to suggest or automatically
+      generate assertions based on expected outcomes derived from the documentation or analysis of
+      the application state during test execution.
     - **Automated Test Healing:** Explore using AI to suggest fixes or automatically adjust test
-      steps when elements or workflows change slightly.
+      steps when elements or workflows change slightly, potentially analyzing test failure logs.
 
 - **Platform Enhancements:**
 
     - **Modern & Responsive UI:** Continue leveraging component-driven design
-      (`BottomNavigationBar.jsx`, etc.) to ensure a seamless and responsive user experience across
-      desktops and mobile devices, including dedicated interfaces for testing, reporting, admin, and
-      documentation (`Docs.jsx`). Ensure consistent styling (`styles.css`).
-    - **Enhanced Authentication & Security:** Strengthen existing authentication flows (`Login`,
-      `SignUp`, `Forgot`/`Reset`) with multi-factor authentication options and continuous monitoring
-      for suspicious activity. Ensure secure API communication and data storage.
-    - **Advanced Admin & Monitoring:** Expand the Admin panel (`Admin.jsx`) with detailed dashboards
-      for monitoring system health, test execution statistics, AI usage, and user activity.
-      Implement comprehensive logging and alerting (`utils.js` for helpers).
-    - **Scalable Backend & Diverse AI Integration:** Optimize server performance and scalability
-      using containerization (`Dockerfile`, `docker-compose.yml`) and potentially orchestration.
-      Fully integrate and utilize the diverse capabilities of AI models (`claude.js`, `deepseek.js`,
-      `gemini.js`, `grok.js`, `openai.js`, `search.js`) for various aspects of the testing process.
+      (`BottomNavigationBar.jsx`, `Navbar.jsx`, etc.) to ensure a seamless and responsive user
+      experience across devices. The main UI (`Landing.jsx` or `App.jsx`) will prioritize the core
+      input mechanism. Ensure consistent styling (`public/styles.css`) and dedicated interfaces for
+      documentation (`Docs.jsx`), admin (`Admin.jsx`), etc.
+    - **Enhanced Authentication & Security:** Strengthen existing authentication flows (`Login.jsx`,
+      `SignUp.jsx`, `Forgot.jsx`, `Reset.jsx`, `server/user.js`, `server/middleware/auth.js`) with
+      multi-factor authentication options and continuous monitoring. Ensure secure API communication
+      and data storage (`server/models/User.js`, `server/index.js`).
+    - **Advanced Admin & Monitoring:** Expand the Admin panel (`Admin.jsx`, `server/admin.js`) with
+      detailed dashboards for monitoring system health, test execution statistics, AI usage
+      (specifically Gemini), and user activity. Implement comprehensive logging and alerting
+      (`server/utils.js`).
+    - **Scalable Backend & Gemini Integration:** Optimize server performance and scalability using
+      containerization (`Dockerfile`, `docker-compose.yml`). Focus backend development
+      (`server/index.js`, `server/gemini.js`, `server/search.js`) on fully integrating and utilizing
+      the Gemini model for the core test generation and execution logic, while preparing for
+      potential future scaling needs.
     - **Robust Error Handling & Observability:** Implement centralized logging and monitoring across
-      the entire application stack to quickly identify, diagnose, and resolve issues in test
-      execution, AI interactions, and user management workflows.
-    - **Continuous Integration/Delivery (CI/CD):** Establish robust CI/CD pipelines to automate
-      builds, testing (of the platform itself), and deployment, ensuring high code quality and
-      faster release cycles.
+      the entire application stack (`server/utils.js`) to quickly identify, diagnose, and resolve
+      issues in test execution, AI interactions, and user management workflows.
+    - **Continuous Integration/Delivery (CI/CD):** Establish robust CI/CD pipelines (`deploy.cmd`,
+      `copy.cmd`, Docker files) to automate builds, testing (of the platform itself), and
+      deployment, ensuring high code quality and faster release cycles.
 
 - **Documentation & Community:**
     - **Integrated Documentation:** Provide accessible in-app documentation and guides (`Docs.jsx`)
-      to help users effectively utilize all features, alongside external comprehensive guides.
-    - **API Documentation:** Generate and maintain clear documentation for the server API to
-      facilitate potential integrations.
+      to help users effectively utilize the core test generation and execution features, alongside
+      external comprehensive guides.
+    - **API Documentation:** Generate and maintain clear documentation for the server API
+      (`server/index.js`, `rest.http`) to facilitate potential integrations.
 
 ## TODO
 
@@ -122,5 +135,6 @@ considerations are being explored:
 - add to main UI starter page two links:
     - link to the test/ticket documentation
     - link to the actual web app URL to test on
-- add server code to parse  test/ticket description, parse webapp url for inputs/buttons and generate test cases
+- add server code to parse test/ticket description, parse webapp url for inputs/buttons and generate
+  test cases
 - add server code to execute test cases
