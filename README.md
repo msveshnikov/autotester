@@ -129,8 +129,6 @@ workflow:
 
 ## TODO
 
-- remove all models except Gemini
-- remove all models from server code, leave only Gemini
 - add to main UI starter page two links:
     - link to the test/ticket documentation
     - link to the actual web app URL to test on

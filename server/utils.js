@@ -44,7 +44,7 @@ export const logError = (message, error, context = {}) => {
     console.error(`[ERROR] ${new Date().toISOString()} ${message}`, context, error);
 };
 
-// The previous enrichMetadata function from the Boiler.pro project is removed
+// The previous enrichMetadata function from the autotester.pro project is removed
 // as it is not relevant to the AutoTester.dev project context.
 
 // Add any other general utility functions here as needed by the server components.

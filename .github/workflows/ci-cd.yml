@@ -1,4 +1,4 @@
-name: Boiler CI/CD
+name: autotester CI/CD
 
 on:
     push:
@@ -14,11 +14,11 @@ jobs:
             - name: copy file via ssh
               uses: garygrossgarten/github-action-scp@master
               with:
-                  host: Boiler.pro
+                  host: autotester.pro
                   username: ubuntu
                   privateKey: ${{ secrets.DEPLOY_KEY }}
                   local: './docker-compose.yml'
-                  remote: 'boiler/docker-compose.yml'
+                  remote: 'autotester/docker-compose.yml'
 
             - name: Setup Bun
               uses: oven-sh/setup-bun@v1
@@ -39,7 +39,7 @@ jobs:
                   docker buildx build \
                   --platform linux/arm64/v8 \
                   --output "type=image,push=true" \
-                  --tag ${{ secrets.DOCKER_USERNAME }}/boiler \
+                  --tag ${{ secrets.DOCKER_USERNAME }}/autotester \
                   .
 
     deploy:
@@ -54,10 +54,10 @@ jobs:
                   mkdir -p ~/.ssh/
                   echo "$SSH_KEY" > ~/.ssh/id_rsa
                   chmod 600 ~/.ssh/id_rsa
-                  ssh-keyscan -H Boiler.pro >> ~/.ssh/known_hosts
-                  ssh ubuntu@Boiler.pro '
-                    docker pull ${{ secrets.DOCKER_USERNAME }}/boiler
-                    cd boiler
+                  ssh-keyscan -H autotester.pro >> ~/.ssh/known_hosts
+                  ssh ubuntu@autotester.pro '
+                    docker pull ${{ secrets.DOCKER_USERNAME }}/autotester
+                    cd autotester
                     docker-compose down
                     docker-compose up -d
                   '

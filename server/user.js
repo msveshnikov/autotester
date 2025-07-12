@@ -55,19 +55,19 @@ const userRoutes = (app) => {
                 await transporter.sendMail({
                     to: email,
                     from: process.env.FROM_EMAIL,
-                    subject: 'Welcome to Boiler.pro!',
+                    subject: 'Welcome to autotester.pro!',
                     html: `
                         <html>
                         <body style="font-family: 'Open Sans', sans-serif; color: #333;">
                             <div style="max-width:600px; margin: auto; padding:20px; border:1px solid #eee; border-radius:8px; background-color:#fff;">
-                            <h1 style="color: #3498DB;">Welcome to Boiler.pro!</h1>
+                            <h1 style="color: #3498DB;">Welcome to autotester.pro!</h1>
                             <p>Hi ${firstName},</p>
-                            <p>Thank you for joining Boiler.pro – your AI-powered partner for automating your research workflow and instantly generating professional presentations.</p>
+                            <p>Thank you for joining autotester.pro – your AI-powered partner for automating your research workflow and instantly generating professional presentations.</p>
                             <p>Please verify your email address to activate your account and start exploring our features:</p>
                             <a href="${process.env.FRONTEND_URL}/api/auth/verify-email?token=${user.verificationToken}&email=${encodeURIComponent(email)}" style="display:inline-block; padding:10px 20px; margin:10px 0; background-color:#3498DB; color:#fff; text-decoration:none; border-radius:4px;">Verify Your Email</a>
                             <p>Once verified, you can dive into dynamic presentation customization and AI-driven insights to elevate your research.</p>
                             <p>If you have any questions, our support team is here to help.</p>
-                            <p>Warm regards,<br>The Boiler.pro Team</p>
+                            <p>Warm regards,<br>The autotester.pro Team</p>
                             </div>
                         </body>
                         </html>
@@ -131,14 +131,14 @@ const userRoutes = (app) => {
             await transporter.sendMail({
                 to: email,
                 from: process.env.FROM_EMAIL,
-                subject: 'Password Reset - Boiler.pro',
+                subject: 'Password Reset - autotester.pro',
                 html: `
           <html>
             <body style="font-family: 'Open Sans', sans-serif; color: #333;">
               <div style="max-width:600px; margin: auto; padding:20px; border:1px solid #eee; border-radius:8px; background-color:#fff;">
                 <h1 style="color: #3498DB;">Password Reset Request</h1>
                 <p>Hello,</p>
-                <p>You have requested to reset your password for your Boiler.pro account. Please click the button below to proceed:</p>
+                <p>You have requested to reset your password for your autotester.pro account. Please click the button below to proceed:</p>
                 <a href="${process.env.FRONTEND_URL}/reset-password/${resetToken}" style="display:inline-block; padding:10px 20px; margin:10px 0; background-color:#3498DB; color:#fff; text-decoration:none; border-radius:4px;">Reset Your Password</a>
                 <p>If you did not request this, please ignore this email.</p>
               </div>
@@ -211,7 +211,7 @@ const userRoutes = (app) => {
         <html>
           <body style="font-family: 'Open Sans', sans-serif; background-color:#f4f4f4; color:#333;">
             <div style="max-width:600px; margin: auto; padding:20px; background-color:#fff; border-radius:8px; text-align:center;">
-              <h1 style="color:#3498DB;">Welcome to Boiler.pro!</h1>
+              <h1 style="color:#3498DB;">Welcome to autotester.pro!</h1>
               <p>Your email has been successfully verified.</p>
               <p>Explore our platform to automate your research workflow and create stunning presentations effortlessly.</p>
               <a href="${process.env.FRONTEND_URL}/presentation-creator" style="display:inline-block; padding:10px 20px; background-color:#3498DB; color:#fff; text-decoration:none; border-radius:4px;">Go to Presentation Creator</a>

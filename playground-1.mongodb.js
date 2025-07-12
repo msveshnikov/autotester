@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* global use, db */
 
-use('boiler');
+use('autotester');
 
 db.users.updateOne(
     { email: 'msveshnikov@gmail.com' },

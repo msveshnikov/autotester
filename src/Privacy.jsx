@@ -124,8 +124,8 @@ const Privacy = () => {
                         You have the right to access, correct, or request deletion of your personal
                         data. To exercise these rights or for any inquiries regarding your data,
                         please contact us at{' '}
-                        <Link href="mailto:privacy@boiler.pro" color="blue.500">
-                            privacy@boiler.pro
+                        <Link href="mailto:privacy@autotester.pro" color="blue.500">
+                            privacy@autotester.pro
                         </Link>
                         .
                     </Text>
@@ -214,8 +214,8 @@ const Privacy = () => {
                     </Heading>
                     <Text mb={4}>
                         For any inquiries regarding this Privacy Policy, please contact us at{' '}
-                        <Link href="mailto:privacy@boiler.pro" color="blue.500">
-                            privacy@boiler.pro
+                        <Link href="mailto:privacy@autotester.pro" color="blue.500">
+                            privacy@autotester.pro
                         </Link>
                         .
                     </Text>

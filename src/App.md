@@ -1,345 +1,148 @@
-# Documentation for src/App.jsx
+# File: src\App.jsx
 
-This document provides an overview and detailed explanation of the components, constants, and
-functionality within the App.jsx file. It also explains the file's role within the overall project
-structure and provides usage examples.
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Dependencies](#dependencies)
-3. [Environment Constant](#environment-constant)
-4. [React Components](#react-components)
-    - [Insights](#insights)
-    - [Management](#management)
-    - [NavigationBar](#navigationbar)
-    - [App](#app)
-5. [Usage Examples](#usage-examples)
-6. [Project Structure and File Role](#project-structure-and-file-role)
-
----
+This file serves as the main entry point and root component for the frontend React application. It
+sets up the core providers required for the application, defines global constants and theme, handles
+initial user authentication state management, and configures the application's routing using
+`react-router-dom`.
 
 ## Overview
 
-The `src/App.jsx` file serves as the main entry point for the React application. It sets up the
-overall application environment by incorporating:
+`App.jsx` is the top-level component that orchestrates the entire user interface. It wraps the
+application in necessary contexts and providers (`ChakraProvider`, `GoogleOAuthProvider`,
+`UserContext`), manages the initial loading and authentication state of the user, defines the main
+application layout (including navigation), and renders different components based on the current URL
+path using React Router.
 
-- **Chakra UI**: Provides a design system and UI components.
-- **React Router**: Manages routing and navigation for the application.
-- **React Icons**: Supplies icon components for use in the navigation bar.
-- **Application Routes/components**: Establishes navigation between the landing page (`Landing`),
-  presentation page (`PresentationCreator`), and placeholder pages for future features (_Insights_
-  and _Management_).
-- **Responsive Navigation Bar**: A fixed bottom navigation bar that provides quick links to various
-  sections of the application.
+## Role in Project
 
----
+As per the project structure, `src/App.jsx` is located at the root of the `src` directory. It is
+imported by `src/main.jsx`, which is typically the actual entry point for rendering the React
+application into the DOM. `App.jsx` acts as the central hub, importing and composing most of the
+other components found in the `src` directory (like `Landing`, `Navbar`, `Login`, `Profile`, etc.)
+and determining which component to render based on the route. It interacts with the backend server
+(defined in the `server/` directory) by fetching user profile data on application load via an API
+call using the `API_URL` constant.
 
-## Dependencies
+## Imports
 
-The file imports several libraries and components:
+The file imports various modules and components:
 
-- **Chakra UI**
-    - `ChakraProvider`, `Box`, `Icon`: For theming, layout, and icon styling.
-- **React Router DOM**
-    - `BrowserRouter`, `Routes`, `Route`, `Navigate`, `Link`: For routing and navigation.
-- **React Icons (Feather icons)**
-    - `FiActivity`, `FiBarChart2`, `FiUsers`, `FiUser`: For iconography in the navigation bar.
-- **Local components**
-    - `Landing`: The landing page component imported from './Landing'.
-    - `PresentationCreator`: The presentation creation component imported from
-      './PresentationCreator'.
+- **External Libraries:**
+    - `@chakra-ui/react`: For UI components and styling (`ChakraProvider`, `Box`, `Container`,
+      `VStack`, `extendTheme`).
+    - `react-router-dom`: For client-side routing (`BrowserRouter as Router`, `Routes`, `Route`,
+      `Navigate`).
+    - `react`: Core React library (`Suspense`, `createContext`, `useEffect`, `useState`).
+    - `@react-oauth/google`: For Google OAuth integration (`GoogleOAuthProvider`).
+- **Internal Components (from `src/`):**
+    - `Landing`: The main landing page component.
+    - `Navbar`: The top navigation bar.
+    - `Terms`: Component for displaying terms and conditions.
+    - `Privacy`: Component for displaying the privacy policy.
+    - `Login`: Component for user login.
+    - `SignUp`: Component for user registration.
+    - `Feedback`: Component for submitting feedback.
+    - `Admin`: Component for the admin panel (protected route).
+    - `Docs`: Component for documentation pages.
+    - `Forgot`: Component for initiating password reset.
+    - `Reset`: Component for resetting password using a token.
+    - `Profile`: Component for displaying/editing user profile (protected route).
+    - `BottomNavigationBar`: The bottom navigation bar.
 
----
+## Constants
 
-## Environment Constant
+- `API_URL`:
+    - **Description:** Defines the base URL for backend API calls.
+    - **Value:** Conditionally set based on the Vite environment variable `import.meta.env.DEV`.
+        - If in development (`import.meta.env.DEV` is true), it's `http://localhost:3000`.
+        - If in production, it's `https://autotester.dev`.
+    - **Purpose:** Provides a single source of truth for the backend endpoint, adapting
+      automatically between development and production environments.
+- `UserContext`:
+    - **Description:** A React Context created using `createContext(null)`.
+    - **Purpose:** Used to share the current user's authentication status (`user` object) and a
+      function to update it (`setUser`) across the component tree without needing to pass them down
+      explicitly as props.
 
-### API_URL
+## Theme Configuration
 
-```jsx
-export const API_URL = import.meta.env.DEV ? 'http://localhost:3000' : 'https://boiler.pro';
-```
+- `theme`:
+    - **Description:** A custom theme object created by extending the default Chakra UI theme using
+      `extendTheme()`.
+    - **Configuration:**
+        - `colors`: Defines custom color palettes (`primary`, `secondary`, `accent`) with different
+          shades (e.g., `500`, `600`).
+        - `fonts`: Specifies custom font families for headings (`Montserrat, sans-serif`) and body
+          text (`Open Sans, sans-serif`).
+    - **Purpose:** Provides consistent styling throughout the application based on the defined
+      design system.
 
-- **Purpose:**  
-  Determines the base URL for API calls based on the environment. It points to a local server during
-  development (when `import.meta.env.DEV` is true) and a production server otherwise.
+## `App` Component
 
-- **Usage:**  
-  Any module that requires the API endpoint for making HTTP requests can import the `API_URL`
-  constant.
+The main functional component of the application.
 
----
+- **Description:** Renders the entire application UI, including global provideautotestervigation,
+  and the main content area which changes based on the current route.
+- **State:**
+    - `user`: Manages the authentication state of the current user.
+        - Initially `undefined`: Indicates that the user's authentication status is being determined
+          (e.g., fetching profile).
+        - `null`: Indicates that no user is logged in.
+        - `{ ...userObject }`: Contains the user's data if logged in.
+- **Effects:**
+    - A `useEffect` hook runs once on component mount (`[]` dependency array).
+    - It checks `localStorage` for an authentication `token`.
+    - If a `token` exists, it attempts to fetch the user's profile data from the backend
+      (`${API_URL}/api/profile`) using the token in the `Authorization` header.
+    - On successful profile fetch, the `user` state is updated with the fetched data.
+    - If the fetch fails (e.g., invalid or expired token), an error is logged, the invalid token is
+      removed from `localStorage`, and the `user` state is set to `null`.
+    - If no `token` is found in `localStorage`, the `user` state is immediately set to `null`.
+    - **Purpose:** To automatically log in the user if a valid token exists from a previous session
+      and determine the initial authentication state.
+- **Rendering Logic:**
+    - If `user` is `undefined` (initial loading state), it renders a simple "Loading user..."
+      message centered on the screen.
+    - Once `user` is `null` or an object, the main application structure is rendered.
+- **JSX Structure:**
+    - Wrapped in `GoogleOAuthProvider` to enable Google Sign-In features.
+    - Wrapped in `ChakraProvider` to apply the custom `theme` and enable Chakra UI components.
+    - Wrapped in `Suspense` with a loading fallback, ready for potential lazy-loaded components.
+    - Wrapped in `UserContext.Provider` to make the `user` state and `setUser` function available to
+      all descendant components.
+    - Wrapped in `Router` (`BrowserRouter`) to enable client-side routing.
+    - A main `Box` container sets a minimum height and background color, and adds padding at the
+      bottom (`pb="50px"`) likely to accommodate the bottom navigation bar.
+    - `Navbar` is rendered at the top.
+    - A `Container` with `VStack` provides a structured content area with spacing.
+    - `Routes` component defines the mapping between URL paths and components.
+    - `BottomNavigationBar` is rendered at the bottom.
 
-## React Components
+## Routes
 
-### Insights
+The `Routes` component defines the application's navigation paths:
 
-```jsx
-const Insights = () => (
-    <Box p={4}>
-        <Box fontSize="xl" fontWeight="bold" mb={2}>
-            Insights
-        </Box>
-        <Box>This feature is coming soon.</Box>
-    </Box>
-);
-```
+- `<Route path="/" element={<Landing />} />`: The home page.
+- `<Route path="/privacy" element={<Privacy />} />`: Privacy policy page.
+- `<Route path="/terms" element={<Terms />} />`: Terms and conditions page.
+- `<Route path="/docs/*" element={<Docs />} />`: Documentation section, the `/*` allows for nested
+  routes within `Docs`.
+- `<Route path="/login" element={<Login />} />`: User login page.
+- `<Route path="/signup" element={<SignUp />} />`: User registration page.
+- `<Route path="/forgot" element={<Forgot />} />`: Forgot password page.
+- `<Route path="/reset-password/:token" element={<Reset />} />`: Password reset page, requiring a
+  dynamic `:token` parameter from the URL.
+- `<Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />`: User
+  profile page. This route is protected; it renders the `Profile` component only if `user` is truthy
+  (logged in), otherwise, it redirects to the `/login` page.
+- `<Route path="/feedback" element={<Feedback />} />`: Feedback submission page (accessible to all).
+- `<Route path="/admin" element={user?.isAdmin ? <Admin /> : <Navigate to="/" replace />} />`: Admin
+  panel page. This route is protected; it renders the `Admin` component only if `user` exists AND
+  `user.isAdmin` is truthy, otherwise, it redirects to the home page (`/`).
+- `<Route path="*" element={<Navigate to="/" replace />} />`: A catch-all route that redirects any
+  unknown or mistyped paths back to the home page (`/`).
 
-- **Description:**  
-  A placeholder component that represents the Insights section. It informs users that the feature
-  will be available in the future.
-- **Parameters:**
+## Usage
 
-    - None
-
-- **Return Value:**  
-  A JSX element comprising of styled `Box` components that display the title "Insights" and a
-  message.
-
----
-
-### Management
-
-```jsx
-const Management = () => (
-    <Box p={4}>
-        <Box fontSize="xl" fontWeight="bold" mb={2}>
-            Management
-        </Box>
-        <Box>This feature is coming soon.</Box>
-    </Box>
-);
-```
-
-- **Description:**  
-  A placeholder component for potential management-related functionality. It simply displays the
-  section title and a notification message.
-- **Parameters:**
-
-    - None
-
-- **Return Value:**  
-  A JSX element that includes some basic Chakra UI boxes with text.
-
----
-
-### NavigationBar
-
-```jsx
-const NavigationBar = () => (
-    <Box
-        position="fixed"
-        bottom="0"
-        left="0"
-        right="0"
-        height="50px"
-        bg="white"
-        borderTopWidth="1px"
-        display="flex"
-        justifyContent="space-around"
-        alignItems="center"
-        zIndex={1000}
-        fontSize="sm"
-        sx={{
-            '@supports (backdrop-filter: blur(10px))': {
-                backdropFilter: 'blur(10px)',
-                bg: 'rgba(255, 255, 255, 0.9)'
-            }
-        }}
-    >
-        <Box
-            as={Link}
-            to="/research"
-            p={2}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            <Icon as={FiActivity} boxSize={5} />
-            <Box fontSize="xs">Research</Box>
-        </Box>
-        <Box
-            as={Link}
-            to="/presentation"
-            p={2}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            <Icon as={FiBarChart2} boxSize={5} />
-            <Box fontSize="xs">Presentation</Box>
-        </Box>
-        <Box
-            as={Link}
-            to="/insights"
-            p={2}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            <Icon as={FiUser} boxSize={5} />
-            <Box fontSize="xs">Insights</Box>
-        </Box>
-        <Box
-            as={Link}
-            to="/management"
-            p={2}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            <Icon as={FiUsers} boxSize={5} />
-            <Box fontSize="xs">Management</Box>
-        </Box>
-    </Box>
-);
-```
-
-- **Description:**  
-  Implements a fixed bottom navigation bar using Chakra UI’s Box component. The navigation bar
-  includes four links:
-
-    - Research
-    - Presentation
-    - Insights
-    - Management
-
-- **Parameters:**
-
-    - None
-
-- **Return Value:**  
-  A JSX element that renders the navigation bar with styled links and icons. The styling ensures it
-  remains fixed at the bottom of the viewport with responsive design considerations (e.g., backdrop
-  blur).
-
----
-
-### App
-
-```jsx
-function App() {
-    return (
-        <ChakraProvider>
-            <Router>
-                <Box pb="50px">
-                    <Routes>
-                        <Route path="/" element={<Landing />} />
-                        <Route path="/presentation" element={<PresentationCreator />} />
-                        <Route path="/insights" element={<Insights />} />
-                        <Route path="/management" element={<Management />} />
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                    <NavigationBar />
-                </Box>
-            </Router>
-        </ChakraProvider>
-    );
-}
-
-export default App;
-```
-
-- **Description:**  
-  The main component of the application. It wraps the application in necessary providers and
-  routers:
-
-    - **ChakraProvider:** Ensures that Chakra UI theming and styling are applied.
-    - **Router (BrowserRouter):** Manages the client-side routing.
-    - **Routes:** Defines application routes with the following mapping:
-        - `/`: Renders the `Landing` component.
-        - `/presentation`: Renders the `PresentationCreator` component.
-        - `/insights`: Renders the `Insights` placeholder.
-        - `/management`: Renders the `Management` placeholder.
-        - Any undefined route (`*`) redirects to the home page (`/`).
-    - **NavigationBar:** Placed at the bottom of the page to ensure navigation throughout the
-      application.
-
-- **Parameters:**
-
-    - None
-
-- **Return Value:**  
-  A JSX element that encapsulates the entire application's layout, route configuration, and bottom
-  navigation bar.
-
----
-
-## Usage Examples
-
-### Running the Application
-
-Assuming the project uses a bundler like Vite or a similar tool, the `App.jsx` is imported and
-rendered in `src/main.jsx`. An example `main.jsx` might look like this:
-
-```jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-```
-
-### Importing the API_URL Constant
-
-Other modules or services in the project can import `API_URL` to configure HTTP requests:
-
-```jsx
-import { API_URL } from './App';
-
-fetch(`${API_URL}/api/some-endpoint`)
-    .then((response) => response.json())
-    .then((data) => console.log(data));
-```
-
----
-
-## Project Structure and File Role
-
-The overall project structure is as follows:
-
-```
-.
-├── .prettierrc
-├── copy.cmd
-├── docker-compose.yml
-├── Dockerfile
-├── index.html
-├── landing.html
-├── package.json
-├── vite.config.js
-├── src
-│   ├── App.jsx                <-- Main application file (this file)
-│   ├── Landing.jsx            <-- Landing page component
-│   ├── main.jsx               <-- Entry point where App is rendered
-│   └── PresentationCreator.jsx <-- Component for creating presentations
-├── server
-│   ├── claude.js
-│   ├── gemini.js
-│   ├── index.js
-│   ├── package.json
-│   ├── presentationSchema.json
-│   └── models
-│       ├── Presentation.js
-│       └── User.js
-├── public
-│   ├── ads.txt
-│   ├── landing.html
-│   └── robots.txt
-└── docs
-    ├── landing_page_copy.html
-    └── social_media_content.json
-```
-
-- **Role of App.jsx:**
-    - Acts as the central hub for client-side routing.
-    - Integrates global theming using Chakra UI.
-    - Provides a consistent layout with a persistent bottom navigation.
-    - Orchestrates the rendering of different pages/components based on the URL.
-
----
-
-This comprehensive documentation should help developers understand the structure, functionality, and
-usage of the `App.jsx` file within the overall project context.
+The `App` component is exported as the default export from this file. It is intended to be imported
+and rendered by the application's main entry file, typically `src/main.jsx`, like this:
